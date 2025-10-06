@@ -18,6 +18,9 @@ export default defineConfig(({ command }) => ({
         "@modelcontextprotocol/sdk/types.js",
         "express",
         "zod",
+        "better-sqlite3",
+        "pino",
+        "pino-pretty",
         "node:crypto",
         "node:http",
         "node:path",
@@ -52,6 +55,6 @@ export default defineConfig(({ command }) => ({
     },
   },
   ssr: {
-    external: ["@modelcontextprotocol/sdk", "express", "zod"],
+    external: ["@modelcontextprotocol/sdk", "express", "zod", "better-sqlite3", "pino", "pino-pretty"],
   },
 }));

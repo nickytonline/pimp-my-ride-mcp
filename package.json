@@ -1,7 +1,7 @@
 {
-  "name": "mcp-typescript-template",
+  "name": "pimp-my-ride-mcp",
   "version": "1.0.0",
-  "description": "TypeScript template for building MCP servers",
+  "description": "Pimp My Ride MCP Server - Car customization and racing demo",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -17,10 +17,12 @@
   },
   "keywords": [
     "mcp",
-    "typescript",
-    "template",
-    "vite",
-    "server"
+    "model-context-protocol",
+    "car-customization",
+    "racing",
+    "pomerium",
+    "demo",
+    "typescript"
   ],
   "author": "",
   "license": "MIT",
@@ -37,9 +39,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.3",
+    "better-sqlite3": "^12.4.1",
     "express": "^5.1.0",
     "pino": "^9.0.0",
-    "pino-pretty": "^11.0.0"
+    "pino-pretty": "^11.0.0",
+    "zod": "^3.25.76"
   }
 }

@@ -3,9 +3,14 @@ import { z } from "zod";
 const configSchema = z.object({
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  SERVER_NAME: z.string().default("mcp-typescript-template"),
+  SERVER_NAME: z.string().default("pimp-my-ride-mcp"),
   SERVER_VERSION: z.string().default("1.0.0"),
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
+
+  // Storage configuration
+  STORAGE_BACKEND: z.enum(["sqlite", "redis", "postgres", "dynamodb"]).default("sqlite"),
+  SQLITE_DB_PATH: z.string().default("./data/pimp-my-ride.db"),
+  SQLITE_VERBOSE: z.coerce.boolean().default(false),
 });
 
 export type Config = z.infer<typeof configSchema>;
