@@ -307,4 +307,4 @@ Pomeranian Kart is a racing game that uses this MCP server for car customization
 
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Pomerium Documentation](https://www.pomerium.com/docs/)
-- [OpenAI Apps SDK](https://developers.openai.com/docs/apps-sdk)
+- [MCP Documentation](https://modelcontextprotocol.io/docs)
