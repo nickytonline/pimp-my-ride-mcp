@@ -2,6 +2,13 @@
 
 A Model Context Protocol (MCP) server for car customization and racing. Build and customize your dream ride with natural language through ChatGPT or Claude!
 
+<div align="center">
+  <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Gumball_3000_-_2007_(483318373).jpg" alt="Xzibit at Gumball 3000 - 2007" width="400">
+  <p><em>Photo: <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA 2.0</a>, via Wikimedia Commons</em></p>
+</div>
+
+> **Note:** This project is an homage to the MTV show _Pimp My Ride_ hosted by Xzibit. Not affiliated with or endorsed by MTV.
+
 ## Features
 
 - 🎨 **Car Customization** - Colors, wheels, body kits, spoilers, exhausts, decals, and underglow
@@ -24,6 +31,7 @@ For production deployments, **secure this server behind [Pomerium](https://www.p
 - 🌐 **Secure Gateway** - Expose internal MCP servers safely to AI agents
 
 Pomerium enables you to define policies like:
+
 - Which users can access which tools
 - Rate limiting per user or group
 - Audit logging of all tool calls
@@ -93,10 +101,13 @@ npm start
 ### Car Customization
 
 #### `getCurrentBuild`
+
 Retrieve or create your active car build with all customizations.
 
 #### `updateCarConfig`
+
 Update car attributes:
+
 - **color** - Primary color (red, blue, green, yellow, orange, purple, pink, black, white, silver, gold, cyan, magenta, lime)
 - **secondaryColor** - Secondary/accent color
 - **wheels** - Wheel type (stock, sport, racing, offroad, chrome, neon, spinner)
@@ -108,31 +119,40 @@ Update car attributes:
 - **performance** - Performance stats (power, grip, aero, weight: 0-100)
 
 #### `updateDriverProfile`
+
 Set driver persona and nickname:
+
 - **persona** - Driver personality: CoolCalmCollected, RoadRage, SpeedDemon, Cautious, ShowOff, Tactical, Wildcard
 - **nickname** - Driver nickname (1-50 characters)
 
 #### `getCustomizationOptions`
+
 Get all available customization options for car parts and driver personas.
 
 #### `getPersonaInfo`
+
 Get detailed information about driver personas including racing style, strengths, and weaknesses.
 
 ### Build Management
 
 #### `saveBuild`
+
 Save the current car build under a specific name.
 
 #### `loadBuild`
+
 Load a saved car build and make it active.
 
 #### `listBuilds`
+
 List all saved car builds with pagination support.
 
 #### `deleteBuild`
+
 Delete a saved car build (cannot delete active build).
 
 #### `getBuildDetails`
+
 Get detailed information about a build including calculated performance score.
 
 ## Architecture
@@ -140,6 +160,7 @@ Get detailed information about a build including calculated performance score.
 ### Storage Layer
 
 The KV storage abstraction provides:
+
 - **Namespaces** - Logical data isolation
 - **TTL Expiration** - Automatic cleanup of expired entries
 - **CAS Versioning** - Compare-and-Set for concurrent updates
@@ -150,6 +171,7 @@ Default implementation uses SQLite with WAL mode for better concurrency.
 ### Authentication
 
 Pomerium authentication resolves user identity from HTTP headers:
+
 - `X-Pomerium-Claim-Sub` - User ID
 - `X-Pomerium-Claim-Email` - Email address
 - `X-Pomerium-Claim-Name` - Display name
@@ -160,6 +182,7 @@ In development mode without Pomerium, the server generates anonymous session-bas
 ### Data Model
 
 **Build Structure:**
+
 ```typescript
 {
   id: string,
@@ -180,22 +203,24 @@ In development mode without Pomerium, the server generates anonymous session-bas
 ## API Endpoints
 
 ### MCP Protocol
+
 - `POST /mcp` - MCP tool calls
 - `GET /mcp` - Server info
 
 ### Health Check
+
 - `GET /health` - Storage health status
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `NODE_ENV` | Environment (development/production/test) | `development` |
-| `LOG_LEVEL` | Logging level (error/warn/info/debug) | `info` |
-| `STORAGE_BACKEND` | Storage type (sqlite/redis/postgres/dynamodb) | `sqlite` |
-| `SQLITE_DB_PATH` | SQLite database file path | `./data/pimp-my-ride.db` |
-| `SQLITE_VERBOSE` | Enable SQL query logging | `false` |
+| Variable          | Description                                   | Default                  |
+| ----------------- | --------------------------------------------- | ------------------------ |
+| `PORT`            | Server port                                   | `3000`                   |
+| `NODE_ENV`        | Environment (development/production/test)     | `development`            |
+| `LOG_LEVEL`       | Logging level (error/warn/info/debug)         | `info`                   |
+| `STORAGE_BACKEND` | Storage type (sqlite/redis/postgres/dynamodb) | `sqlite`                 |
+| `SQLITE_DB_PATH`  | SQLite database file path                     | `./data/pimp-my-ride.db` |
+| `SQLITE_VERBOSE`  | Enable SQL query logging                      | `false`                  |
 
 ## Development
 
@@ -273,6 +298,7 @@ routes:
 ```
 
 See [Pomerium MCP docs](https://www.pomerium.com/docs/capabilities/mcp) for advanced configuration including:
+
 - Tool-level authorization
 - User/group-based access control
 - Rate limiting
@@ -281,11 +307,13 @@ See [Pomerium MCP docs](https://www.pomerium.com/docs/capabilities/mcp) for adva
 ## Roadmap
 
 ### Phase 2 - AI Assistance
+
 - [ ] `randomizeBuild` - Generate random themed builds
 - [ ] `suggestUpgrades` - AI-powered upgrade recommendations
 - [ ] `generateLivery` - Color scheme suggestions
 
 ### Phase 3 - Racing
+
 - [ ] `simulateRace` - Race simulation
 - [ ] `getLeaderboard` - Global rankings
 - [ ] Race results persistence
