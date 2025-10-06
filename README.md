@@ -236,10 +236,18 @@ src/
 
 ## Deployment
 
-### Docker (Coming Soon)
+### Docker
+
+Available on [Docker Hub: nickytonline/pimp-my-ride-mcp](https://hub.docker.com/r/nickytonline/pimp-my-ride-mcp)
 
 ```bash
+# Pull from Docker Hub
+docker pull nickytonline/pimp-my-ride-mcp
+
+# Or build locally
 docker build -t pimp-my-ride-mcp .
+
+# Run
 docker run -p 3000:3000 -v ./data:/app/data pimp-my-ride-mcp
 ```
 
