@@ -3,10 +3,10 @@
  * Handles car configuration, driver profiles, and build persistence
  */
 
-import type { KV } from '../storage/index.ts';
-import { KVHelpers } from '../storage/index.ts';
-import type { UserIdentity } from '../auth/pomerium.ts';
-import { canAccessBuild } from '../auth/pomerium.ts';
+import type { KV } from "../storage/index.ts";
+import { KVHelpers } from "../storage/index.ts";
+import type { UserIdentity } from "../auth/pomerium.ts";
+import { canAccessBuild } from "../auth/pomerium.ts";
 import {
   type Build,
   type BuildMetadata,
@@ -16,10 +16,10 @@ import {
   DriverProfileUpdateSchema,
   createBuild,
   calculatePerformanceScore,
-} from '../domain/models.ts';
+} from "../domain/models.ts";
 
-const BUILDS_NAMESPACE = 'builds';
-const ACTIVE_BUILD_KEY = 'active';
+const BUILDS_NAMESPACE = "builds";
+const ACTIVE_BUILD_KEY = "active";
 
 /**
  * Build storage key format: ${userId}:${buildId}
@@ -33,7 +33,7 @@ function buildKey(userId: string, buildId: string): string {
  */
 export async function getCurrentBuild(
   kv: KV,
-  identity: UserIdentity
+  identity: UserIdentity,
 ): Promise<Build> {
   const key = buildKey(identity.userId, ACTIVE_BUILD_KEY);
 
@@ -57,7 +57,7 @@ export async function getCurrentBuild(
 export async function updateCarConfig(
   kv: KV,
   identity: UserIdentity,
-  updates: CarConfigUpdate
+  updates: CarConfigUpdate,
 ): Promise<Build> {
   // Validate updates
   const validatedUpdates = CarConfigUpdateSchema.parse(updates);
@@ -82,7 +82,7 @@ export async function updateCarConfig(
 export async function updateDriverProfile(
   kv: KV,
   identity: UserIdentity,
-  updates: DriverProfileUpdate
+  updates: DriverProfileUpdate,
 ): Promise<Build> {
   // Validate updates
   const validatedUpdates = DriverProfileUpdateSchema.parse(updates);
@@ -107,7 +107,7 @@ export async function updateDriverProfile(
 export async function saveBuild(
   kv: KV,
   identity: UserIdentity,
-  name: string
+  name: string,
 ): Promise<Build> {
   // Get current active build
   const activeBuild = await getCurrentBuild(kv, identity);
@@ -117,7 +117,11 @@ export async function saveBuild(
 
   // Check if a build with this name already exists
   const existingKey = buildKey(identity.userId, buildId);
-  const existing = await KVHelpers.getJSON<Build>(kv, BUILDS_NAMESPACE, existingKey);
+  const existing = await KVHelpers.getJSON<Build>(
+    kv,
+    BUILDS_NAMESPACE,
+    existingKey,
+  );
 
   if (existing) {
     throw new Error(`A build named "${name}" already exists`);
@@ -144,7 +148,7 @@ export async function saveBuild(
 export async function loadBuild(
   kv: KV,
   identity: UserIdentity,
-  buildId: string
+  buildId: string,
 ): Promise<Build> {
   const key = buildKey(identity.userId, buildId);
 
@@ -159,7 +163,7 @@ export async function loadBuild(
 
   // Verify the user owns this build
   if (!canAccessBuild(identity, identity.userId)) {
-    throw new Error('Access denied');
+    throw new Error("Access denied");
   }
 
   // Copy to active build
@@ -181,7 +185,7 @@ export async function loadBuild(
 export async function listBuilds(
   kv: KV,
   identity: UserIdentity,
-  options?: { limit?: number; cursor?: string }
+  options?: { limit?: number; cursor?: string },
 ): Promise<{ builds: BuildMetadata[]; cursor: string | null }> {
   const { limit = 50, cursor } = options || {};
 
@@ -206,7 +210,11 @@ export async function listBuilds(
     }
 
     // Get the build
-    const buildResult = await KVHelpers.getJSON<Build>(kv, BUILDS_NAMESPACE, fullKey);
+    const buildResult = await KVHelpers.getJSON<Build>(
+      kv,
+      BUILDS_NAMESPACE,
+      fullKey,
+    );
 
     if (buildResult) {
       const build = buildResult.value;
@@ -231,11 +239,11 @@ export async function listBuilds(
 export async function deleteBuild(
   kv: KV,
   identity: UserIdentity,
-  buildId: string
+  buildId: string,
 ): Promise<boolean> {
   // Prevent deleting the active build
   if (buildId === ACTIVE_BUILD_KEY) {
-    throw new Error('Cannot delete the active build');
+    throw new Error("Cannot delete the active build");
   }
 
   const key = buildKey(identity.userId, buildId);
@@ -248,7 +256,7 @@ export async function deleteBuild(
 export async function getBuildDetails(
   kv: KV,
   identity: UserIdentity,
-  buildId: string = ACTIVE_BUILD_KEY
+  buildId: string = ACTIVE_BUILD_KEY,
 ): Promise<Build & { performanceScore: number }> {
   const key = buildKey(identity.userId, buildId);
 
@@ -280,7 +288,7 @@ export async function getBuildDetails(
 function sanitizeBuildId(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
     .substring(0, 50);
 }

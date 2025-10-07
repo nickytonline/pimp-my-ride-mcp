@@ -3,13 +3,13 @@
  * Supports multiple backends (SQLite by default, extensible to Redis, PostgreSQL, DynamoDB, etc.)
  */
 
-import type { KV } from './kv.ts';
-import { SQLiteKV, type SQLiteKVOptions } from './sqlite.ts';
+import type { KV } from "./kv.ts";
+import { SQLiteKV, type SQLiteKVOptions } from "./sqlite.ts";
 
 /**
  * Supported storage backend types
  */
-export type StorageBackend = 'sqlite' | 'redis' | 'postgres' | 'dynamodb';
+export type StorageBackend = "sqlite" | "redis" | "postgres" | "dynamodb";
 
 /**
  * Configuration options for the KV factory
@@ -32,25 +32,25 @@ export interface KVFactoryOptions {
  * @throws Error if the backend is not supported
  */
 export function createKV(options: KVFactoryOptions = {}): KV {
-  const { backend = 'sqlite' } = options;
+  const { backend = "sqlite" } = options;
 
   switch (backend) {
-    case 'sqlite':
+    case "sqlite":
       return new SQLiteKV(options.sqlite);
 
-    case 'redis':
+    case "redis":
       throw new Error(
-        'Redis backend not yet implemented. Please use SQLite or implement RedisKV adapter.'
+        "Redis backend not yet implemented. Please use SQLite or implement RedisKV adapter.",
       );
 
-    case 'postgres':
+    case "postgres":
       throw new Error(
-        'PostgreSQL backend not yet implemented. Please use SQLite or implement PostgresKV adapter.'
+        "PostgreSQL backend not yet implemented. Please use SQLite or implement PostgresKV adapter.",
       );
 
-    case 'dynamodb':
+    case "dynamodb":
       throw new Error(
-        'DynamoDB backend not yet implemented. Please use SQLite or implement DynamoKV adapter.'
+        "DynamoDB backend not yet implemented. Please use SQLite or implement DynamoKV adapter.",
       );
 
     default:

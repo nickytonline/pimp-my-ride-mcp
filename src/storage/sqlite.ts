@@ -4,7 +4,7 @@
  * Supports CAS (Compare-And-Set) versioning and TTL expiration
  */
 
-import Database from 'better-sqlite3';
+import Database from "better-sqlite3";
 import type {
   KV,
   GetOptions,
@@ -13,7 +13,7 @@ import type {
   GetResult,
   ListResult,
   ValueMetadata,
-} from './kv.ts';
+} from "./kv.ts";
 
 /**
  * Configuration options for SQLiteKV
@@ -32,13 +32,15 @@ export class SQLiteKV implements KV {
   #db: Database.Database;
 
   constructor(options: SQLiteKVOptions = {}) {
-    const { filename = ':memory:', verbose = false } = options;
+    const { filename = ":memory:", verbose = false } = options;
 
     // Initialize database with WAL mode for better concurrency
-    this.#db = new Database(filename, { verbose: verbose ? console.log : undefined });
+    this.#db = new Database(filename, {
+      verbose: verbose ? console.log : undefined,
+    });
 
     // Enable WAL mode for better write concurrency
-    this.#db.pragma('journal_mode = WAL');
+    this.#db.pragma("journal_mode = WAL");
 
     // Initialize schema
     this.#initSchema();
@@ -71,14 +73,16 @@ export class SQLiteKV implements KV {
   #cleanupExpired(ns: string, key: string): void {
     const now = Date.now();
     this.#db
-      .prepare('DELETE FROM kv WHERE ns = ? AND key = ? AND expires_at IS NOT NULL AND expires_at <= ?')
+      .prepare(
+        "DELETE FROM kv WHERE ns = ? AND key = ? AND expires_at IS NOT NULL AND expires_at <= ?",
+      )
       .run(ns, key, now);
   }
 
   async get<T = unknown>(
     ns: string,
     key: string,
-    options?: GetOptions
+    options?: GetOptions,
   ): Promise<GetResult<T> | null> {
     // Clean up expired entry
     this.#cleanupExpired(ns, key);
@@ -87,7 +91,7 @@ export class SQLiteKV implements KV {
       .prepare(
         `SELECT value, content_type, version, expires_at, updated_at
          FROM kv
-         WHERE ns = ? AND key = ?`
+         WHERE ns = ? AND key = ?`,
       )
       .get(ns, key) as
       | {
@@ -110,8 +114,8 @@ export class SQLiteKV implements KV {
 
     // Parse value based on content type
     let value: T;
-    if (row.content_type === 'application/json') {
-      value = JSON.parse(row.value.toString('utf-8')) as T;
+    if (row.content_type === "application/json") {
+      value = JSON.parse(row.value.toString("utf-8")) as T;
     } else {
       value = row.value as T;
     }
@@ -130,16 +134,16 @@ export class SQLiteKV implements KV {
     ns: string,
     key: string,
     value: unknown,
-    options?: SetOptions
+    options?: SetOptions,
   ): Promise<number> {
-    const { ttl, contentType = 'application/json', cas } = options || {};
+    const { ttl, contentType = "application/json", cas } = options || {};
     const now = Date.now();
     const expiresAt = ttl ? now + ttl * 1000 : null;
 
     // Serialize value based on content type
     let serialized: Buffer;
-    if (contentType === 'application/json') {
-      serialized = Buffer.from(JSON.stringify(value), 'utf-8');
+    if (contentType === "application/json") {
+      serialized = Buffer.from(JSON.stringify(value), "utf-8");
     } else {
       serialized = value as Buffer;
     }
@@ -150,13 +154,13 @@ export class SQLiteKV implements KV {
 
       if (current === null) {
         throw new Error(
-          `CAS failed: key ${ns}:${key} does not exist (expected version ${cas})`
+          `CAS failed: key ${ns}:${key} does not exist (expected version ${cas})`,
         );
       }
 
       if (current.metadata.version !== cas) {
         throw new Error(
-          `CAS failed: version mismatch for ${ns}:${key} (expected ${cas}, got ${current.metadata.version})`
+          `CAS failed: version mismatch for ${ns}:${key} (expected ${cas}, got ${current.metadata.version})`,
         );
       }
 
@@ -165,13 +169,13 @@ export class SQLiteKV implements KV {
         .prepare(
           `UPDATE kv
            SET value = ?, content_type = ?, version = version + 1, expires_at = ?, updated_at = ?
-           WHERE ns = ? AND key = ? AND version = ?`
+           WHERE ns = ? AND key = ? AND version = ?`,
         )
         .run(serialized, contentType, expiresAt, now, ns, key, cas);
 
       if (info.changes === 0) {
         throw new Error(
-          `CAS failed: concurrent update detected for ${ns}:${key}`
+          `CAS failed: concurrent update detected for ${ns}:${key}`,
         );
       }
 
@@ -189,16 +193,18 @@ export class SQLiteKV implements KV {
            version = version + 1,
            expires_at = excluded.expires_at,
            updated_at = excluded.updated_at
-         RETURNING version`
+         RETURNING version`,
       )
-      .get(ns, key, serialized, contentType, expiresAt, now) as { version: number };
+      .get(ns, key, serialized, contentType, expiresAt, now) as {
+      version: number;
+    };
 
     return result.version;
   }
 
   async delete(ns: string, key: string): Promise<boolean> {
     const info = this.#db
-      .prepare('DELETE FROM kv WHERE ns = ? AND key = ?')
+      .prepare("DELETE FROM kv WHERE ns = ? AND key = ?")
       .run(ns, key);
 
     return info.changes > 0;
@@ -208,23 +214,25 @@ export class SQLiteKV implements KV {
     const { limit = 100, cursor, prefix } = options || {};
 
     // Parse cursor (base64 encoded key)
-    const startKey = cursor ? Buffer.from(cursor, 'base64').toString('utf-8') : '';
+    const startKey = cursor
+      ? Buffer.from(cursor, "base64").toString("utf-8")
+      : "";
 
     // Build query with prefix filter
-    let query = 'SELECT key FROM kv WHERE ns = ?';
+    let query = "SELECT key FROM kv WHERE ns = ?";
     const params: (string | number)[] = [ns];
 
     if (prefix) {
-      query += ' AND key LIKE ?';
+      query += " AND key LIKE ?";
       params.push(`${prefix}%`);
     }
 
     if (startKey) {
-      query += ' AND key > ?';
+      query += " AND key > ?";
       params.push(startKey);
     }
 
-    query += ' ORDER BY key LIMIT ?';
+    query += " ORDER BY key LIMIT ?";
     params.push(limit + 1); // Fetch one extra to determine if there are more results
 
     const now = Date.now();
@@ -237,11 +245,13 @@ export class SQLiteKV implements KV {
 
     // Determine if there are more results
     const hasMore = rows.length > limit;
-    const keys = hasMore ? rows.slice(0, limit).map((r) => r.key) : rows.map((r) => r.key);
+    const keys = hasMore
+      ? rows.slice(0, limit).map((r) => r.key)
+      : rows.map((r) => r.key);
 
     // Generate next cursor
     const nextCursor = hasMore
-      ? Buffer.from(keys[keys.length - 1]).toString('base64')
+      ? Buffer.from(keys[keys.length - 1]).toString("base64")
       : null;
 
     return { keys, cursor: nextCursor };
@@ -250,7 +260,7 @@ export class SQLiteKV implements KV {
   async healthcheck(): Promise<boolean> {
     try {
       // Try a simple query to verify database is accessible
-      this.#db.prepare('SELECT 1').get();
+      this.#db.prepare("SELECT 1").get();
       return true;
     } catch (error) {
       return false;
@@ -268,7 +278,9 @@ export class SQLiteKV implements KV {
   cleanupAllExpired(): number {
     const now = Date.now();
     const info = this.#db
-      .prepare('DELETE FROM kv WHERE expires_at IS NOT NULL AND expires_at <= ?')
+      .prepare(
+        "DELETE FROM kv WHERE expires_at IS NOT NULL AND expires_at <= ?",
+      )
       .run(now);
 
     return info.changes;
@@ -285,17 +297,21 @@ export class SQLiteKV implements KV {
     const now = Date.now();
 
     const totalEntries = (
-      this.#db.prepare('SELECT COUNT(*) as count FROM kv').get() as { count: number }
+      this.#db.prepare("SELECT COUNT(*) as count FROM kv").get() as {
+        count: number;
+      }
     ).count;
 
     const expiredEntries = (
       this.#db
-        .prepare('SELECT COUNT(*) as count FROM kv WHERE expires_at IS NOT NULL AND expires_at <= ?')
+        .prepare(
+          "SELECT COUNT(*) as count FROM kv WHERE expires_at IS NOT NULL AND expires_at <= ?",
+        )
         .get(now) as { count: number }
     ).count;
 
     const namespaces = (
-      this.#db.prepare('SELECT COUNT(DISTINCT ns) as count FROM kv').get() as {
+      this.#db.prepare("SELECT COUNT(DISTINCT ns) as count FROM kv").get() as {
         count: number;
       }
     ).count;
