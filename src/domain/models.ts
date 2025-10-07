@@ -197,7 +197,9 @@ export type Build = z.infer<typeof BuildSchema>;
 /**
  * Partial car config update (all fields optional)
  */
-export const CarConfigUpdateSchema = CarConfigSchema.partial();
+export const CarConfigUpdateSchema = CarConfigSchema.extend({
+  performance: PerformanceSchema.partial().optional(),
+}).partial();
 
 export type CarConfigUpdate = z.infer<typeof CarConfigUpdateSchema>;
 

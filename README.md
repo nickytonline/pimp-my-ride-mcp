@@ -74,6 +74,7 @@ Create a `.env` file (see `.env.example`):
 
 ```bash
 # Server Configuration
+HOST=0.0.0.0
 PORT=3000
 NODE_ENV=development
 LOG_LEVEL=info
@@ -215,6 +216,7 @@ In development mode without Pomerium, the server generates anonymous session-bas
 
 | Variable          | Description                                   | Default                  |
 | ----------------- | --------------------------------------------- | ------------------------ |
+| `HOST`            | Server host/interface to bind                 | `0.0.0.0`                |
 | `PORT`            | Server port                                   | `3000`                   |
 | `NODE_ENV`        | Environment (development/production/test)     | `development`            |
 | `LOG_LEVEL`       | Logging level (error/warn/info/debug)         | `info`                   |
