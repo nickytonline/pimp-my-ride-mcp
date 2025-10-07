@@ -52,16 +52,22 @@ const getServer = (req: express.Request) => {
     "getCurrentBuild",
     {
       title: "Get Current Car Build",
-      description: "Retrieve or create the user's active car build with all customizations",
+      description:
+        "Retrieve or create the user's active car build with all customizations",
       inputSchema: {},
     },
     async () => {
       try {
-        logger.info("Tool executed: getCurrentBuild", { userId: identity.userId });
+        logger.info("Tool executed: getCurrentBuild", {
+          userId: identity.userId,
+        });
         const build = await getCurrentBuild(kv, identity);
         return createTextResult(build);
       } catch (error) {
-        logger.error("Error in getCurrentBuild", { error, userId: identity.userId });
+        logger.error("Error in getCurrentBuild", {
+          error,
+          userId: identity.userId,
+        });
         return createErrorResult(error);
       }
     },
@@ -74,29 +80,138 @@ const getServer = (req: express.Request) => {
       title: "Update Car Configuration",
       description: "Update car attributes like color, wheels, bodyKit, etc.",
       inputSchema: {
-        color: z.enum(["red", "blue", "green", "yellow", "orange", "purple", "pink", "black", "white", "silver", "gold", "cyan", "magenta", "lime"]).optional().describe("Primary color of the car"),
-        secondaryColor: z.enum(["red", "blue", "green", "yellow", "orange", "purple", "pink", "black", "white", "silver", "gold", "cyan", "magenta", "lime"]).optional().describe("Secondary/accent color"),
-        wheels: z.enum(["stock", "sport", "racing", "offroad", "chrome", "neon", "spinner"]).optional().describe("Wheel type"),
-        bodyKit: z.enum(["stock", "sport", "racing", "drift", "luxury", "rally", "muscle"]).optional().describe("Body kit style"),
-        decal: z.enum(["none", "racing_stripes", "flames", "tribal", "camo", "carbon_fiber", "checkered", "sponsor", "custom"]).optional().describe("Decal/livery style"),
-        spoiler: z.enum(["none", "stock", "sport", "racing", "gt_wing", "ducktail"]).optional().describe("Spoiler type"),
-        exhaust: z.enum(["stock", "sport", "racing", "dual", "quad", "side_exit"]).optional().describe("Exhaust system"),
-        underglow: z.enum(["none", "red", "blue", "green", "purple", "rainbow", "white"]).optional().describe("Underglow lighting"),
-        performance: z.object({
-          power: z.number().min(0).max(100).optional().describe("Engine power (0-100)"),
-          grip: z.number().min(0).max(100).optional().describe("Tire grip (0-100)"),
-          aero: z.number().min(0).max(100).optional().describe("Aerodynamics (0-100)"),
-          weight: z.number().min(0).max(100).optional().describe("Weight reduction (0-100, higher = lighter)"),
-        }).optional().describe("Performance characteristics"),
+        color: z
+          .enum([
+            "red",
+            "blue",
+            "green",
+            "yellow",
+            "orange",
+            "purple",
+            "pink",
+            "black",
+            "white",
+            "silver",
+            "gold",
+            "cyan",
+            "magenta",
+            "lime",
+          ])
+          .optional()
+          .describe("Primary color of the car"),
+        secondaryColor: z
+          .enum([
+            "red",
+            "blue",
+            "green",
+            "yellow",
+            "orange",
+            "purple",
+            "pink",
+            "black",
+            "white",
+            "silver",
+            "gold",
+            "cyan",
+            "magenta",
+            "lime",
+          ])
+          .optional()
+          .describe("Secondary/accent color"),
+        wheels: z
+          .enum([
+            "stock",
+            "sport",
+            "racing",
+            "offroad",
+            "chrome",
+            "neon",
+            "spinner",
+          ])
+          .optional()
+          .describe("Wheel type"),
+        bodyKit: z
+          .enum([
+            "stock",
+            "sport",
+            "racing",
+            "drift",
+            "luxury",
+            "rally",
+            "muscle",
+          ])
+          .optional()
+          .describe("Body kit style"),
+        decal: z
+          .enum([
+            "none",
+            "racing_stripes",
+            "flames",
+            "tribal",
+            "camo",
+            "carbon_fiber",
+            "checkered",
+            "sponsor",
+            "custom",
+          ])
+          .optional()
+          .describe("Decal/livery style"),
+        spoiler: z
+          .enum(["none", "stock", "sport", "racing", "gt_wing", "ducktail"])
+          .optional()
+          .describe("Spoiler type"),
+        exhaust: z
+          .enum(["stock", "sport", "racing", "dual", "quad", "side_exit"])
+          .optional()
+          .describe("Exhaust system"),
+        underglow: z
+          .enum(["none", "red", "blue", "green", "purple", "rainbow", "white"])
+          .optional()
+          .describe("Underglow lighting"),
+        performance: z
+          .object({
+            power: z
+              .number()
+              .min(0)
+              .max(100)
+              .optional()
+              .describe("Engine power (0-100)"),
+            grip: z
+              .number()
+              .min(0)
+              .max(100)
+              .optional()
+              .describe("Tire grip (0-100)"),
+            aero: z
+              .number()
+              .min(0)
+              .max(100)
+              .optional()
+              .describe("Aerodynamics (0-100)"),
+            weight: z
+              .number()
+              .min(0)
+              .max(100)
+              .optional()
+              .describe("Weight reduction (0-100, higher = lighter)"),
+          })
+          .optional()
+          .describe("Performance characteristics"),
       },
     },
     async (args) => {
       try {
-        logger.info("Tool executed: updateCarConfig", { userId: identity.userId, updates: args });
+        logger.info("Tool executed: updateCarConfig", {
+          userId: identity.userId,
+          updates: args,
+        });
         const build = await updateCarConfig(kv, identity, args);
         return createTextResult(build);
       } catch (error) {
-        logger.error("Error in updateCarConfig", { error, userId: identity.userId });
+        logger.error("Error in updateCarConfig", {
+          error,
+          userId: identity.userId,
+        });
         return createErrorResult(error);
       }
     },
@@ -109,17 +224,39 @@ const getServer = (req: express.Request) => {
       title: "Update Driver Profile",
       description: "Set driver persona and nickname",
       inputSchema: {
-        persona: z.enum(["CoolCalmCollected", "RoadRage", "SpeedDemon", "Cautious", "ShowOff", "Tactical", "Wildcard"]).optional().describe("Driver personality and racing style"),
-        nickname: z.string().min(1).max(50).optional().describe("Driver nickname"),
+        persona: z
+          .enum([
+            "CoolCalmCollected",
+            "RoadRage",
+            "SpeedDemon",
+            "Cautious",
+            "ShowOff",
+            "Tactical",
+            "Wildcard",
+          ])
+          .optional()
+          .describe("Driver personality and racing style"),
+        nickname: z
+          .string()
+          .min(1)
+          .max(50)
+          .optional()
+          .describe("Driver nickname"),
       },
     },
     async (args) => {
       try {
-        logger.info("Tool executed: updateDriverProfile", { userId: identity.userId, updates: args });
+        logger.info("Tool executed: updateDriverProfile", {
+          userId: identity.userId,
+          updates: args,
+        });
         const build = await updateDriverProfile(kv, identity, args);
         return createTextResult(build);
       } catch (error) {
-        logger.error("Error in updateDriverProfile", { error, userId: identity.userId });
+        logger.error("Error in updateDriverProfile", {
+          error,
+          userId: identity.userId,
+        });
         return createErrorResult(error);
       }
     },
@@ -130,14 +267,18 @@ const getServer = (req: express.Request) => {
     "saveBuild",
     {
       title: "Save Car Build",
-      description: "Save the current car build configuration under a specific name",
+      description:
+        "Save the current car build configuration under a specific name",
       inputSchema: {
         name: z.string().min(1).max(100).describe("Name for the saved build"),
       },
     },
     async (args) => {
       try {
-        logger.info("Tool executed: saveBuild", { userId: identity.userId, name: args.name });
+        logger.info("Tool executed: saveBuild", {
+          userId: identity.userId,
+          name: args.name,
+        });
         const build = await saveBuild(kv, identity, args.name);
         return createTextResult(build);
       } catch (error) {
@@ -159,7 +300,10 @@ const getServer = (req: express.Request) => {
     },
     async (args) => {
       try {
-        logger.info("Tool executed: loadBuild", { userId: identity.userId, buildId: args.buildId });
+        logger.info("Tool executed: loadBuild", {
+          userId: identity.userId,
+          buildId: args.buildId,
+        });
         const build = await loadBuild(kv, identity, args.buildId);
         return createTextResult(build);
       } catch (error) {
@@ -176,8 +320,16 @@ const getServer = (req: express.Request) => {
       title: "List Car Builds",
       description: "List all saved car builds for the user",
       inputSchema: {
-        limit: z.number().min(1).max(100).optional().describe("Maximum number of builds to return (default: 50)"),
-        cursor: z.string().optional().describe("Pagination cursor from previous response"),
+        limit: z
+          .number()
+          .min(1)
+          .max(100)
+          .optional()
+          .describe("Maximum number of builds to return (default: 50)"),
+        cursor: z
+          .string()
+          .optional()
+          .describe("Pagination cursor from previous response"),
       },
     },
     async (args) => {
@@ -204,11 +356,17 @@ const getServer = (req: express.Request) => {
     },
     async (args) => {
       try {
-        logger.info("Tool executed: deleteBuild", { userId: identity.userId, buildId: args.buildId });
+        logger.info("Tool executed: deleteBuild", {
+          userId: identity.userId,
+          buildId: args.buildId,
+        });
         const deleted = await deleteBuild(kv, identity, args.buildId);
         return createTextResult({ deleted, buildId: args.buildId });
       } catch (error) {
-        logger.error("Error in deleteBuild", { error, userId: identity.userId });
+        logger.error("Error in deleteBuild", {
+          error,
+          userId: identity.userId,
+        });
         return createErrorResult(error);
       }
     },
@@ -219,18 +377,28 @@ const getServer = (req: express.Request) => {
     "getBuildDetails",
     {
       title: "Get Car Build Details",
-      description: "Get detailed information about a car build including performance score",
+      description:
+        "Get detailed information about a car build including performance score",
       inputSchema: {
-        buildId: z.string().optional().describe("ID of the build (defaults to active build)"),
+        buildId: z
+          .string()
+          .optional()
+          .describe("ID of the build (defaults to active build)"),
       },
     },
     async (args) => {
       try {
-        logger.info("Tool executed: getBuildDetails", { userId: identity.userId, buildId: args.buildId });
+        logger.info("Tool executed: getBuildDetails", {
+          userId: identity.userId,
+          buildId: args.buildId,
+        });
         const details = await getBuildDetails(kv, identity, args.buildId);
         return createTextResult(details);
       } catch (error) {
-        logger.error("Error in getBuildDetails", { error, userId: identity.userId });
+        logger.error("Error in getBuildDetails", {
+          error,
+          userId: identity.userId,
+        });
         return createErrorResult(error);
       }
     },
@@ -241,7 +409,8 @@ const getServer = (req: express.Request) => {
     "getCustomizationOptions",
     {
       title: "Get Customization Options",
-      description: "Get all available car customization options (colors, wheels, body kits, etc.)",
+      description:
+        "Get all available car customization options (colors, wheels, body kits, etc.)",
       inputSchema: {},
     },
     async () => {
@@ -270,16 +439,33 @@ const getServer = (req: express.Request) => {
     "getPersonaInfo",
     {
       title: "Get Driver Persona Info",
-      description: "Get information about driver personas including racing style, strengths and weaknesses",
+      description:
+        "Get information about driver personas including racing style, strengths and weaknesses",
       inputSchema: {
-        persona: z.enum(["CoolCalmCollected", "RoadRage", "SpeedDemon", "Cautious", "ShowOff", "Tactical", "Wildcard"]).optional().describe("Specific persona to get info for (returns all if not specified)"),
+        persona: z
+          .enum([
+            "CoolCalmCollected",
+            "RoadRage",
+            "SpeedDemon",
+            "Cautious",
+            "ShowOff",
+            "Tactical",
+            "Wildcard",
+          ])
+          .optional()
+          .describe(
+            "Specific persona to get info for (returns all if not specified)",
+          ),
       },
     },
     async (args) => {
       try {
         logger.info("Tool executed: getPersonaInfo", { persona: args.persona });
         if (args.persona) {
-          return createTextResult({ persona: args.persona, ...PERSONA_PERKS[args.persona] });
+          return createTextResult({
+            persona: args.persona,
+            ...PERSONA_PERKS[args.persona],
+          });
         }
         return createTextResult(PERSONA_PERKS);
       } catch (error) {
@@ -387,7 +573,7 @@ async function main() {
   const config = getConfig();
 
   // Ensure data directory exists for SQLite
-  if (config.STORAGE_BACKEND === 'sqlite') {
+  if (config.STORAGE_BACKEND === "sqlite") {
     const dataDir = dirname(config.SQLITE_DB_PATH);
     try {
       await mkdir(dataDir, { recursive: true });
@@ -395,7 +581,7 @@ async function main() {
     } catch (error) {
       logger.error("Failed to create data directory", {
         path: dataDir,
-        error: error instanceof Error ? error.message : error
+        error: error instanceof Error ? error.message : error,
       });
       process.exit(1);
     }
@@ -436,16 +622,15 @@ async function main() {
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
 
-  app.listen(config.PORT, () => {
-    logger.info(
-      `Pimp My Ride MCP Server running on port ${config.PORT}`,
-      {
-        environment: config.NODE_ENV,
-        serverName: config.SERVER_NAME,
-        version: config.SERVER_VERSION,
-        storage: config.STORAGE_BACKEND,
-      },
-    );
+  app.listen(config.PORT, config.HOST, () => {
+    logger.info("Pimp My Ride MCP Server running", {
+      host: config.HOST,
+      port: config.PORT,
+      environment: config.NODE_ENV,
+      serverName: config.SERVER_NAME,
+      version: config.SERVER_VERSION,
+      storage: config.STORAGE_BACKEND,
+    });
   });
 }
 

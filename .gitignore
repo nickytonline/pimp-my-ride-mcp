@@ -146,3 +146,4 @@ vite.config.ts.timestamp-*
 
 # Pomeranian Kart data
 data/
+test-results.json
