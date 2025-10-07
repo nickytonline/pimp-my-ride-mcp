@@ -83,7 +83,7 @@ export interface KV {
   get<T = unknown>(
     ns: string,
     key: string,
-    options?: GetOptions
+    options?: GetOptions,
   ): Promise<GetResult<T> | null>;
 
   /**
@@ -99,7 +99,7 @@ export interface KV {
     ns: string,
     key: string,
     value: unknown,
-    options?: SetOptions
+    options?: SetOptions,
   ): Promise<number>;
 
   /**
@@ -140,9 +140,9 @@ export const KVHelpers = {
   async getJSON<T = unknown>(
     kv: KV,
     ns: string,
-    key: string
+    key: string,
   ): Promise<GetResult<T> | null> {
-    return kv.get<T>(ns, key, { contentType: 'application/json' });
+    return kv.get<T>(ns, key, { contentType: "application/json" });
   },
 
   /**
@@ -153,11 +153,11 @@ export const KVHelpers = {
     ns: string,
     key: string,
     value: T,
-    options?: Omit<SetOptions, 'contentType'>
+    options?: Omit<SetOptions, "contentType">,
   ): Promise<number> {
     return kv.set(ns, key, value, {
       ...options,
-      contentType: 'application/json',
+      contentType: "application/json",
     });
   },
 };

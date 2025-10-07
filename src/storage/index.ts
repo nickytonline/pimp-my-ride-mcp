@@ -11,10 +11,14 @@ export type {
   ValueMetadata,
   GetResult,
   ListResult,
-} from './kv.ts';
+} from "./kv.ts";
 
-export { KVHelpers } from './kv.ts';
+export { KVHelpers } from "./kv.ts";
 
-export { SQLiteKV, type SQLiteKVOptions } from './sqlite.ts';
+export { SQLiteKV, type SQLiteKVOptions } from "./sqlite.ts";
 
-export { createKV, type KVFactoryOptions, type StorageBackend } from './factory.ts';
+export {
+  createKV,
+  type KVFactoryOptions,
+  type StorageBackend,
+} from "./factory.ts";

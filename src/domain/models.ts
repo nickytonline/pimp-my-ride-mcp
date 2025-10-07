@@ -3,26 +3,26 @@
  * Includes car configuration, driver profiles, and build management
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Color options for car customization
  */
 export const ColorSchema = z.enum([
-  'red',
-  'blue',
-  'green',
-  'yellow',
-  'orange',
-  'purple',
-  'pink',
-  'black',
-  'white',
-  'silver',
-  'gold',
-  'cyan',
-  'magenta',
-  'lime',
+  "red",
+  "blue",
+  "green",
+  "yellow",
+  "orange",
+  "purple",
+  "pink",
+  "black",
+  "white",
+  "silver",
+  "gold",
+  "cyan",
+  "magenta",
+  "lime",
 ]);
 
 export type Color = z.infer<typeof ColorSchema>;
@@ -31,13 +31,13 @@ export type Color = z.infer<typeof ColorSchema>;
  * Wheel options
  */
 export const WheelTypeSchema = z.enum([
-  'stock',
-  'sport',
-  'racing',
-  'offroad',
-  'chrome',
-  'neon',
-  'spinner',
+  "stock",
+  "sport",
+  "racing",
+  "offroad",
+  "chrome",
+  "neon",
+  "spinner",
 ]);
 
 export type WheelType = z.infer<typeof WheelTypeSchema>;
@@ -46,13 +46,13 @@ export type WheelType = z.infer<typeof WheelTypeSchema>;
  * Body kit options
  */
 export const BodyKitSchema = z.enum([
-  'stock',
-  'sport',
-  'racing',
-  'drift',
-  'luxury',
-  'rally',
-  'muscle',
+  "stock",
+  "sport",
+  "racing",
+  "drift",
+  "luxury",
+  "rally",
+  "muscle",
 ]);
 
 export type BodyKit = z.infer<typeof BodyKitSchema>;
@@ -61,15 +61,15 @@ export type BodyKit = z.infer<typeof BodyKitSchema>;
  * Decal/livery options
  */
 export const DecalSchema = z.enum([
-  'none',
-  'racing_stripes',
-  'flames',
-  'tribal',
-  'camo',
-  'carbon_fiber',
-  'checkered',
-  'sponsor',
-  'custom',
+  "none",
+  "racing_stripes",
+  "flames",
+  "tribal",
+  "camo",
+  "carbon_fiber",
+  "checkered",
+  "sponsor",
+  "custom",
 ]);
 
 export type Decal = z.infer<typeof DecalSchema>;
@@ -78,12 +78,12 @@ export type Decal = z.infer<typeof DecalSchema>;
  * Spoiler options
  */
 export const SpoilerSchema = z.enum([
-  'none',
-  'stock',
-  'sport',
-  'racing',
-  'gt_wing',
-  'ducktail',
+  "none",
+  "stock",
+  "sport",
+  "racing",
+  "gt_wing",
+  "ducktail",
 ]);
 
 export type Spoiler = z.infer<typeof SpoilerSchema>;
@@ -92,12 +92,12 @@ export type Spoiler = z.infer<typeof SpoilerSchema>;
  * Exhaust options
  */
 export const ExhaustSchema = z.enum([
-  'stock',
-  'sport',
-  'racing',
-  'dual',
-  'quad',
-  'side_exit',
+  "stock",
+  "sport",
+  "racing",
+  "dual",
+  "quad",
+  "side_exit",
 ]);
 
 export type Exhaust = z.infer<typeof ExhaustSchema>;
@@ -106,13 +106,13 @@ export type Exhaust = z.infer<typeof ExhaustSchema>;
  * Underglow options
  */
 export const UnderglowSchema = z.enum([
-  'none',
-  'red',
-  'blue',
-  'green',
-  'purple',
-  'rainbow',
-  'white',
+  "none",
+  "red",
+  "blue",
+  "green",
+  "purple",
+  "rainbow",
+  "white",
 ]);
 
 export type Underglow = z.infer<typeof UnderglowSchema>;
@@ -137,14 +137,14 @@ export type Performance = z.infer<typeof PerformanceSchema>;
  * Car configuration
  */
 export const CarConfigSchema = z.object({
-  color: ColorSchema.default('red'),
+  color: ColorSchema.default("red"),
   secondaryColor: ColorSchema.optional(),
-  wheels: WheelTypeSchema.default('stock'),
-  bodyKit: BodyKitSchema.default('stock'),
-  decal: DecalSchema.default('none'),
-  spoiler: SpoilerSchema.default('none'),
-  exhaust: ExhaustSchema.default('stock'),
-  underglow: UnderglowSchema.default('none'),
+  wheels: WheelTypeSchema.default("stock"),
+  bodyKit: BodyKitSchema.default("stock"),
+  decal: DecalSchema.default("none"),
+  spoiler: SpoilerSchema.default("none"),
+  exhaust: ExhaustSchema.default("stock"),
+  underglow: UnderglowSchema.default("none"),
   performance: PerformanceSchema.default({
     power: 50,
     grip: 50,
@@ -159,13 +159,13 @@ export type CarConfig = z.infer<typeof CarConfigSchema>;
  * Driver persona types
  */
 export const DriverPersonaSchema = z.enum([
-  'CoolCalmCollected',
-  'RoadRage',
-  'SpeedDemon',
-  'Cautious',
-  'ShowOff',
-  'Tactical',
-  'Wildcard',
+  "CoolCalmCollected",
+  "RoadRage",
+  "SpeedDemon",
+  "Cautious",
+  "ShowOff",
+  "Tactical",
+  "Wildcard",
 ]);
 
 export type DriverPersona = z.infer<typeof DriverPersonaSchema>;
@@ -174,7 +174,7 @@ export type DriverPersona = z.infer<typeof DriverPersonaSchema>;
  * Driver profile
  */
 export const DriverProfileSchema = z.object({
-  persona: DriverPersonaSchema.default('CoolCalmCollected'),
+  persona: DriverPersonaSchema.default("CoolCalmCollected"),
   nickname: z.string().min(1).max(50).optional(),
 });
 
@@ -228,39 +228,59 @@ export const PERSONA_PERKS: Record<
   { description: string; strengths: string[]; weaknesses: string[] }
 > = {
   CoolCalmCollected: {
-    description: 'Steady and consistent, rarely makes mistakes',
-    strengths: ['Consistent lap times', 'Good under pressure', 'Smooth cornering'],
-    weaknesses: ['Not the fastest top speed', 'Conservative overtaking'],
+    description: "Steady and consistent, rarely makes mistakes",
+    strengths: [
+      "Consistent lap times",
+      "Good under pressure",
+      "Smooth cornering",
+    ],
+    weaknesses: ["Not the fastest top speed", "Conservative overtaking"],
   },
   RoadRage: {
-    description: 'Aggressive and unpredictable, high risk high reward',
-    strengths: ['Aggressive overtaking', 'High top speed', 'Intimidating presence'],
-    weaknesses: ['Prone to crashes', 'Inconsistent', 'Burns tires quickly'],
+    description: "Aggressive and unpredictable, high risk high reward",
+    strengths: [
+      "Aggressive overtaking",
+      "High top speed",
+      "Intimidating presence",
+    ],
+    weaknesses: ["Prone to crashes", "Inconsistent", "Burns tires quickly"],
   },
   SpeedDemon: {
-    description: 'All about top speed and acceleration',
-    strengths: ['Highest top speed', 'Quick acceleration', 'Dominates straights'],
-    weaknesses: ['Poor cornering', 'Struggles on technical tracks', 'High fuel consumption'],
+    description: "All about top speed and acceleration",
+    strengths: [
+      "Highest top speed",
+      "Quick acceleration",
+      "Dominates straights",
+    ],
+    weaknesses: [
+      "Poor cornering",
+      "Struggles on technical tracks",
+      "High fuel consumption",
+    ],
   },
   Cautious: {
-    description: 'Safety first, rarely crashes',
-    strengths: ['No crashes', 'Excellent fuel economy', 'Good tire management'],
-    weaknesses: ['Slowest lap times', 'Easily overtaken', 'Too defensive'],
+    description: "Safety first, rarely crashes",
+    strengths: ["No crashes", "Excellent fuel economy", "Good tire management"],
+    weaknesses: ["Slowest lap times", "Easily overtaken", "Too defensive"],
   },
   ShowOff: {
-    description: 'Style over substance, loves drifts and tricks',
-    strengths: ['Spectacular drifts', 'Crowd favorite', 'Unpredictable lines'],
-    weaknesses: ['Wastes time on style', 'Burns tires', 'Inconsistent'],
+    description: "Style over substance, loves drifts and tricks",
+    strengths: ["Spectacular drifts", "Crowd favorite", "Unpredictable lines"],
+    weaknesses: ["Wastes time on style", "Burns tires", "Inconsistent"],
   },
   Tactical: {
-    description: 'Strategic and calculated, optimizes every move',
-    strengths: ['Perfect pit strategy', 'Overtakes at the right moment', 'Adapts to conditions'],
-    weaknesses: ['Overthinks', 'Can be too conservative', 'Slow to react'],
+    description: "Strategic and calculated, optimizes every move",
+    strengths: [
+      "Perfect pit strategy",
+      "Overtakes at the right moment",
+      "Adapts to conditions",
+    ],
+    weaknesses: ["Overthinks", "Can be too conservative", "Slow to react"],
   },
   Wildcard: {
-    description: 'Completely unpredictable, anything can happen',
-    strengths: ['Random boosts', 'Surprising overtakes', 'Chaos factor'],
-    weaknesses: ['Random crashes', 'Inconsistent', 'Hard to predict'],
+    description: "Completely unpredictable, anything can happen",
+    strengths: ["Random boosts", "Surprising overtakes", "Chaos factor"],
+    weaknesses: ["Random crashes", "Inconsistent", "Hard to predict"],
   },
 };
 
@@ -285,14 +305,18 @@ export function createBuild(
   id: string,
   name?: string,
   car?: Partial<CarConfig>,
-  driver?: Partial<DriverProfile>
+  driver?: Partial<DriverProfile>,
 ): Build {
   const now = Date.now();
   return BuildSchema.parse({
     id,
     name,
-    car: car ? { ...createDefaultCarConfig(), ...car } : createDefaultCarConfig(),
-    driver: driver ? { ...createDefaultDriverProfile(), ...driver } : createDefaultDriverProfile(),
+    car: car
+      ? { ...createDefaultCarConfig(), ...car }
+      : createDefaultCarConfig(),
+    driver: driver
+      ? { ...createDefaultDriverProfile(), ...driver }
+      : createDefaultDriverProfile(),
     createdAt: now,
     updatedAt: now,
   });

@@ -3,7 +3,7 @@
  * Extracts user identity from Pomerium proxy headers
  */
 
-import type { Request } from 'express';
+import type { Request } from "express";
 
 /**
  * User identity extracted from Pomerium headers
@@ -25,13 +25,13 @@ export interface UserIdentity {
  */
 const POMERIUM_HEADERS = {
   // User identifier (typically email or subject)
-  USER_ID: 'x-pomerium-claim-sub',
+  USER_ID: "x-pomerium-claim-sub",
   // User email
-  EMAIL: 'x-pomerium-claim-email',
+  EMAIL: "x-pomerium-claim-email",
   // Display name
-  NAME: 'x-pomerium-claim-name',
+  NAME: "x-pomerium-claim-name",
   // JWT assertion
-  JWT: 'x-pomerium-jwt-assertion',
+  JWT: "x-pomerium-jwt-assertion",
 } as const;
 
 /**
@@ -56,7 +56,9 @@ export function resolveIdentity(req: Request): UserIdentity {
   }
 
   // Log warning about anonymous access
-  console.warn('⚠️  Anonymous user detected - no Pomerium authentication headers found. In production, configure Pomerium proxy.');
+  console.warn(
+    "⚠️  Anonymous user detected - no Pomerium authentication headers found. In production, configure Pomerium proxy.",
+  );
 
   // Fallback: check for JWT assertion
   const jwt = req.headers[POMERIUM_HEADERS.JWT] as string | undefined;
@@ -92,14 +94,14 @@ export function resolveIdentity(req: Request): UserIdentity {
  */
 function sanitizeUserId(userId: string): string {
   // Remove any null bytes, newlines, or other control characters
-  let sanitized = userId.replace(/[\x00-\x1F\x7F]/g, '');
+  let sanitized = userId.replace(/[\x00-\x1F\x7F]/g, "");
 
   // Trim whitespace
   sanitized = sanitized.trim();
 
   // Ensure it's not empty after sanitization
   if (!sanitized) {
-    throw new Error('Invalid user ID: empty after sanitization');
+    throw new Error("Invalid user ID: empty after sanitization");
   }
 
   // Normalize to lowercase for consistency
@@ -118,13 +120,13 @@ function parseJWTPayload(jwt: string): {
   name?: string;
   [key: string]: unknown;
 } {
-  const parts = jwt.split('.');
+  const parts = jwt.split(".");
   if (parts.length !== 3) {
-    throw new Error('Invalid JWT format');
+    throw new Error("Invalid JWT format");
   }
 
   const payload = parts[1];
-  const decoded = Buffer.from(payload, 'base64').toString('utf-8');
+  const decoded = Buffer.from(payload, "base64").toString("utf-8");
   return JSON.parse(decoded);
 }
 
@@ -135,14 +137,14 @@ function parseJWTPayload(jwt: string): {
  */
 function generateAnonymousId(req: Request): string {
   // Use IP and User-Agent to generate a pseudo-stable anonymous ID
-  const ip = req.ip || 'unknown';
-  const userAgent = req.headers['user-agent'] || 'unknown';
+  const ip = req.ip || "unknown";
+  const userAgent = req.headers["user-agent"] || "unknown";
 
   // Create a simple hash-like ID (not cryptographically secure, just for dev)
   const combined = `${ip}:${userAgent}`;
   const hash = Array.from(combined).reduce(
     (acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0,
-    0
+    0,
   );
 
   return `anon_${Math.abs(hash).toString(36)}`;
@@ -154,7 +156,9 @@ function generateAnonymousId(req: Request): string {
  */
 export function requireAuth(identity: UserIdentity): void {
   if (!identity.authenticated) {
-    throw new Error('Authentication required. Please configure Pomerium authentication.');
+    throw new Error(
+      "Authentication required. Please configure Pomerium authentication.",
+    );
   }
 }
 
@@ -164,6 +168,9 @@ export function requireAuth(identity: UserIdentity): void {
  * @param buildUserId - User ID that owns the build
  * @returns True if access is allowed
  */
-export function canAccessBuild(identity: UserIdentity, buildUserId: string): boolean {
+export function canAccessBuild(
+  identity: UserIdentity,
+  buildUserId: string,
+): boolean {
   return identity.userId === buildUserId;
 }
