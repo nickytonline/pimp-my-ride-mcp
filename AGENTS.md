@@ -12,7 +12,9 @@
 - `npm run lint` / `lint:fix` enforce ESLint rules, and `npm run format` / `format:check` apply Prettier formatting to `src/**/*.ts`.
 
 ## Coding Style & Naming Conventions
-- Stick to 2-space indentation, TypeScript ES modules, and named exports for reusable helpers. Tool IDs, data keys, and environment flags use `camelCase`.
+- Stick to 2-space indentation, TypeScript ES modules, and named exports for reusable helpers.
+- **MCP tool names MUST use `snake_case`** (e.g., `get_current_build`, `update_car_config`) to align with community best practices and framework conventions.
+- TypeScript function names, data keys, and environment flags use `camelCase`.
 - Run Prettier and ESLint before opening a PR, and keep drive-by formatting out of feature branches.
 - Schema updates belong in `src/domain/models.ts`; type aliases should live next to the logic they support.
 
