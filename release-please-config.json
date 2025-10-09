@@ -3,6 +3,7 @@
     ".": {
       "release-type": "node",
       "package-name": "pimp-my-ride-mcp",
+      "include-component-in-tag": false,
       "bump-minor-pre-major": false,
       "bump-patch-for-minor-pre-major": false,
       "changelog-sections": [
