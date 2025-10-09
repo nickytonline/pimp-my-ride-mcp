@@ -49,7 +49,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Get current build
   server.registerTool(
-    "getCurrentBuild",
+    "get_current_build",
     {
       title: "Get Current Car Build",
       description:
@@ -79,7 +79,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Update car configuration
   server.registerTool(
-    "updateCarConfig",
+    "update_car_config",
     {
       title: "Update Car Configuration",
       description: "Update car attributes like color, wheels, bodyKit, etc.",
@@ -223,7 +223,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Update driver profile
   server.registerTool(
-    "updateDriverProfile",
+    "update_driver_profile",
     {
       title: "Update Driver Profile",
       description: "Set driver persona and nickname",
@@ -268,7 +268,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Save build
   server.registerTool(
-    "saveBuild",
+    "save_build",
     {
       title: "Save Car Build",
       description:
@@ -294,7 +294,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Load build
   server.registerTool(
-    "loadBuild",
+    "load_build",
     {
       title: "Load Car Build",
       description: "Load a saved car build and make it the active build",
@@ -323,7 +323,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: List builds
   server.registerTool(
-    "listBuilds",
+    "list_builds",
     {
       title: "List Car Builds",
       description: "List all saved car builds for the user",
@@ -358,7 +358,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Delete build
   server.registerTool(
-    "deleteBuild",
+    "delete_build",
     {
       title: "Delete Car Build",
       description: "Delete a saved car build (cannot delete active build)",
@@ -386,7 +386,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Get build details
   server.registerTool(
-    "getBuildDetails",
+    "get_build_details",
     {
       title: "Get Car Build Details",
       description:
@@ -422,7 +422,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Get customization options
   server.registerTool(
-    "getCustomizationOptions",
+    "get_customization_options",
     {
       title: "Get Customization Options",
       description:
@@ -456,7 +456,7 @@ const getServer = (req: express.Request) => {
 
   // Register tool: Get persona info
   server.registerTool(
-    "getPersonaInfo",
+    "get_persona_info",
     {
       title: "Get Driver Persona Info",
       description:

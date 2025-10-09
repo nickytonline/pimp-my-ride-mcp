@@ -103,9 +103,10 @@ The following environment variables are supported (see `src/config.ts`):
 When adding new tools to the MCP server:
 
 1. Register the tool with `server.registerTool()`
-2. Provide a clear title and description
-3. Define input schema using Zod for validation
-4. Return responses in MCP content format with JSON stringified data
-5. Handle errors gracefully and return appropriate error messages
-6. Use structured logging to track tool usage: `logger.info("Tool executed", { toolName, args })`
-7. Log errors with context: `logger.error("Tool execution failed", { toolName, error: error.message })`
+2. **IMPORTANT: Tool names MUST use `snake_case`** (e.g., `get_current_build`, `update_car_config`) to align with MCP community best practices and framework conventions
+3. Provide a clear title and description
+4. Define input schema using Zod for validation
+5. Return responses in MCP content format with JSON stringified data
+6. Handle errors gracefully and return appropriate error messages
+7. Use structured logging to track tool usage: `logger.info("Tool executed", { toolName, args })`
+8. Log errors with context: `logger.error("Tool execution failed", { toolName, error: error.message })`
