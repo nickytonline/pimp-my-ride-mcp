@@ -54,6 +54,10 @@ const getServer = (req: express.Request) => {
       title: "Get Current Car Build",
       description:
         "Retrieve or create the user's active car build with all customizations",
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
       inputSchema: {},
     },
     async () => {
@@ -294,6 +298,10 @@ const getServer = (req: express.Request) => {
     {
       title: "Load Car Build",
       description: "Load a saved car build and make it the active build",
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
       inputSchema: {
         buildId: z.string().describe("ID of the build to load"),
       },
@@ -319,6 +327,10 @@ const getServer = (req: express.Request) => {
     {
       title: "List Car Builds",
       description: "List all saved car builds for the user",
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
       inputSchema: {
         limit: z
           .number()
@@ -379,6 +391,10 @@ const getServer = (req: express.Request) => {
       title: "Get Car Build Details",
       description:
         "Get detailed information about a car build including performance score",
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
       inputSchema: {
         buildId: z
           .string()
@@ -411,6 +427,10 @@ const getServer = (req: express.Request) => {
       title: "Get Customization Options",
       description:
         "Get all available car customization options (colors, wheels, body kits, etc.)",
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
       inputSchema: {},
     },
     async () => {
@@ -441,6 +461,10 @@ const getServer = (req: express.Request) => {
       title: "Get Driver Persona Info",
       description:
         "Get information about driver personas including racing style, strengths and weaknesses",
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
       inputSchema: {
         persona: z
           .enum([
