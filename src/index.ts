@@ -66,6 +66,10 @@ const getServer = (req: express.Request) => {
       {
         title: `${widget.id} widget`,
         description: `HTML template for ${widget.id}`,
+        mimeType: "text/html+skybridge",
+        _meta: {
+          "openai/widgetPrefersBorder": true,
+        },
       },
       async () => {
         try {
@@ -119,6 +123,13 @@ const getServer = (req: express.Request) => {
         openWorldHint: true,
       },
       inputSchema: {},
+      _meta: {
+        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
     },
     async () => {
       try {
@@ -153,6 +164,13 @@ const getServer = (req: express.Request) => {
     {
       title: "Update Car Configuration",
       description: "Update car attributes like color, wheels, bodyKit, etc.",
+      _meta: {
+        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
       inputSchema: {
         color: z
           .enum([
@@ -298,6 +316,13 @@ const getServer = (req: express.Request) => {
     {
       title: "Update Driver Profile",
       description: "Set driver persona and nickname",
+      _meta: {
+        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
       inputSchema: {
         persona: z
           .enum([
@@ -345,6 +370,13 @@ const getServer = (req: express.Request) => {
       title: "Save Car Build",
       description:
         "Save the current car build configuration under a specific name",
+      _meta: {
+        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
       inputSchema: {
         name: z.string().min(1).max(100).describe("Name for the saved build"),
       },
@@ -375,6 +407,13 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
+      _meta: {
+        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
       inputSchema: {
         buildId: z.string().describe("ID of the build to load"),
       },
@@ -404,6 +443,13 @@ const getServer = (req: express.Request) => {
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
+      },
+      _meta: {
+        "openai/outputTemplate": WIDGETS.buildList.uri,
+        "openai/toolInvocation/invoking": WIDGETS.buildList.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.buildList.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
       },
       inputSchema: {
         limit: z
@@ -470,6 +516,13 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
+      _meta: {
+        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
       inputSchema: {
         buildId: z
           .string()
@@ -507,6 +560,13 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
+      _meta: {
+        "openai/outputTemplate": WIDGETS.optionsGrid.uri,
+        "openai/toolInvocation/invoking": WIDGETS.optionsGrid.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.optionsGrid.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
+      },
       inputSchema: {},
     },
     async () => {
@@ -541,6 +601,13 @@ const getServer = (req: express.Request) => {
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
+      },
+      _meta: {
+        "openai/outputTemplate": WIDGETS.personaCard.uri,
+        "openai/toolInvocation/invoking": WIDGETS.personaCard.invoking,
+        "openai/toolInvocation/invoked": WIDGETS.personaCard.invoked,
+        "openai/widgetAccessible": true,
+        "openai/resultCanProduceWidget": true,
       },
       inputSchema: {
         persona: z
