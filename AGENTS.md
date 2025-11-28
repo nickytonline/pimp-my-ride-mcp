@@ -1,33 +1,19 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/` hosts TypeScript sources by concern: `auth/` handles identity headers, `tools/` exposes MCP tools, `storage/` implements KV adapters, `lib/` shares helpers; `src/index.ts` wires the server.
-- SQLite artifacts live in `data/`; clean builds emit to `dist/` via Vite. Commit only source and configuration.
-- Runtime options are declared in `src/config.ts`. Extend the Zod schema whenever you add an environment variable so validation fails fast.
+Sources live under `src/`, grouped by concern: `auth/` handles identity headers, `tools/` exposes MCP tools, `storage/` provides KV adapters, and `lib/` holds shared helpers. Domain schemas sit in `src/domain/models.ts`, while runtime wiring stays in `src/index.ts`. SQLite data resides in `data/` (never commit), and builds emit to `dist/` via Vite. Place Vitest specs beside code as `*.test.ts`.
 
 ## Build, Test, and Development Commands
-- `npm run dev` starts the MCP server with watch mode and type stripping—use it for feature work.
-- `npm run build` bundles to `dist/`; verify production behavior with `npm start` after building.
-- `npm test` runs Vitest in watch mode, while `npm run test:ci` emits `test-results.json` for pipelines.
-- `npm run lint` / `lint:fix` enforce ESLint rules, and `npm run format` / `format:check` apply Prettier formatting to `src/**/*.ts`.
+Use `npm run dev` for a watch-mode MCP server with on-the-fly type stripping. Ship with `npm run build`, then confirm production behavior through `npm start`. Run `npm test` for interactive Vitest, or `npm run test:ci` to produce `test-results.json`. Lint and format with `npm run lint`, `npm run lint:fix`, `npm run format`, and `npm run format:check`.
 
 ## Coding Style & Naming Conventions
-- Stick to 2-space indentation, TypeScript ES modules, and named exports for reusable helpers.
-- **MCP tool names MUST use `snake_case`** (e.g., `get_current_build`, `update_car_config`) to align with community best practices and framework conventions.
-- TypeScript function names, data keys, and environment flags use `camelCase`.
-- Run Prettier and ESLint before opening a PR, and keep drive-by formatting out of feature branches.
-- Schema updates belong in `src/domain/models.ts`; type aliases should live next to the logic they support.
+Write TypeScript ES modules with 2-space indentation and named exports for reusable helpers. Adopt camelCase for functions, keys, and env flags, while MCP tool identifiers stay snake_case (e.g., `get_current_build`). Keep schema updates centralized in `src/domain/models.ts`. Always apply Prettier and ESLint via the provided scripts before submitting reviews.
 
 ## Testing Guidelines
-- Author Vitest specs beside features using the `*.test.ts` suffix (e.g. `src/tools/builds.test.ts`). Mock `KV` via the interfaces in `src/storage/`.
-- Target coverage on tool registration, domain validators, and error paths; simulate both valid and invalid payloads.
-- Execute `npm run test:ci` locally before pushing to ensure deterministic output for reviewers.
+Vitest is the test runner; co-locate specs next to implementations as `feature.test.ts`. Mock storage via interfaces in `src/storage/` to cover KV adapters and error paths. Target scenarios around tool registration, domain validation, and invalid payload handling. Prefer `npm run test:ci` ahead of pushes to ensure deterministic artifacts.
 
 ## Commit & Pull Request Guidelines
-- Follow Conventional Commits (`feat:`, `fix:`, `chore:`) as seen in history; include a scope when touching a single module (e.g. `feat(storage): add redis adapter`).
-- Keep PRs focused, describe how to exercise the change, and link tracking issues. Attach screenshots or sample MCP transcripts when behavior changes.
-- Call out configuration or migration steps in the PR body so deployers can update `.env` and data stores safely.
+Follow Conventional Commits (`feat(storage): ...`, `fix: ...`) and keep changes focused. Document how to exercise the change, link tracking issues, and include screenshots or MCP transcripts for behavioral updates. Call out config or migration steps so deployers can update `.env` and data stores safely. Ensure tests and linting pass locally before opening a PR.
 
 ## Configuration & Security Tips
-- Environment defaults are Zod-validated on startup; document additions in `README.md` and update `src/config.ts`.
-- SQLite files under `data/` may contain user data—exclude them from commits and scrub sensitive fixtures before sharing.
+Declare new environment toggles in `src/config.ts` and document them in `README.md`. Validate defaults with Zod so misconfiguration fails fast. Treat `data/` as sensitive; scrub user content from fixtures and keep SQLite files out of commits.
