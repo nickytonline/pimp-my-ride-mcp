@@ -12,6 +12,8 @@ const widgetEntries = {
 
 export default defineConfig({
   plugins: [react()],
+  // Serve public folder for test pages
+  publicDir: "public",
   build: {
     outDir: "dist/widgets",
     // Build widgets with shared React chunk
@@ -32,12 +34,22 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Allow reverse tunnel hosts (e.g., Pomerium Zero SSH tunnels)
+    allowedHosts: ["ssh", ".pomerium.app", ".pomerium.io"],
+    // Serve built widget files from dist/widgets at /widgets path
+    fs: {
+      allow: ["dist/widgets", "src"],
+    },
     proxy: {
       "/mcp": {
         target: "http://localhost:3000",
         changeOrigin: true,
       },
       "/health": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+      "/widgets": {
         target: "http://localhost:3000",
         changeOrigin: true,
       },
