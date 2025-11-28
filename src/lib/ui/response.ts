@@ -5,7 +5,7 @@ import { createWidgetMeta, type WidgetDescriptor } from "./widget-meta.ts";
  * Extended CallToolResult that includes UI widget metadata
  */
 export interface UIToolResult extends CallToolResult {
-  structuredContent: unknown;
+  structuredContent: { [x: string]: unknown } | undefined;
   _meta: Record<string, unknown>;
 }
 
@@ -21,7 +21,10 @@ export function createUIResult(
   textSummary: string,
   widget: WidgetDescriptor
 ): UIToolResult {
-  const safeData = data === undefined ? null : data;
+  // Convert data to the expected structured content format
+  const structuredContent = data === undefined || data === null
+    ? undefined
+    : (data as { [x: string]: unknown });
 
   return {
     content: [
@@ -30,7 +33,7 @@ export function createUIResult(
         text: textSummary,
       },
     ],
-    structuredContent: safeData,
+    structuredContent,
     _meta: createWidgetMeta(widget),
   };
 }

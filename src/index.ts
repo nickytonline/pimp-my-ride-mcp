@@ -8,6 +8,8 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { createTextResult } from "./lib/utils.ts";
 import { createErrorResult } from "./lib/errors.ts";
+import { createUIResult } from "./lib/ui/response.ts";
+import { WIDGETS } from "./widgets/registry.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config.ts";
 import { createKV, type KV } from "./storage/index.ts";
@@ -32,6 +34,7 @@ import {
   ExhaustSchema,
   UnderglowSchema,
   DriverPersonaSchema,
+  type DriverPersona,
 } from "./domain/models.ts";
 
 // Initialize KV storage
@@ -66,7 +69,8 @@ const getServer = (req: express.Request) => {
           userId: identity.userId,
         });
         const build = await getCurrentBuild(kv, identity);
-        return createTextResult(build);
+        const summary = `Your ${build.car.color} build "${build.name || 'Unnamed'}" with ${build.car.wheels} wheels`;
+        return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in getCurrentBuild", {
           error,
@@ -210,7 +214,8 @@ const getServer = (req: express.Request) => {
           updates: args,
         });
         const build = await updateCarConfig(kv, identity, args);
-        return createTextResult(build);
+        const summary = `Updated your build - now ${build.car.color} with ${build.car.wheels} wheels`;
+        return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in updateCarConfig", {
           error,
@@ -255,7 +260,8 @@ const getServer = (req: express.Request) => {
           updates: args,
         });
         const build = await updateDriverProfile(kv, identity, args);
-        return createTextResult(build);
+        const summary = `Driver profile updated to ${build.driver.persona}${build.driver.nickname ? ` (${build.driver.nickname})` : ''}`;
+        return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in updateDriverProfile", {
           error,
@@ -284,7 +290,8 @@ const getServer = (req: express.Request) => {
           name: args.name,
         });
         const build = await saveBuild(kv, identity, args.name);
-        return createTextResult(build);
+        const summary = `Build saved as "${args.name}"`;
+        return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in saveBuild", { error, userId: identity.userId });
         return createErrorResult(error);
@@ -313,7 +320,8 @@ const getServer = (req: express.Request) => {
           buildId: args.buildId,
         });
         const build = await loadBuild(kv, identity, args.buildId);
-        return createTextResult(build);
+        const summary = `Loaded build "${build.name || 'Unnamed'}"`;
+        return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in loadBuild", { error, userId: identity.userId });
         return createErrorResult(error);
@@ -348,7 +356,8 @@ const getServer = (req: express.Request) => {
       try {
         logger.info("Tool executed: listBuilds", { userId: identity.userId });
         const result = await listBuilds(kv, identity, args);
-        return createTextResult(result);
+        const summary = `Found ${result.builds.length} saved build${result.builds.length === 1 ? '' : 's'}`;
+        return createUIResult(result, summary, WIDGETS.buildList);
       } catch (error) {
         logger.error("Error in listBuilds", { error, userId: identity.userId });
         return createErrorResult(error);
@@ -409,7 +418,8 @@ const getServer = (req: express.Request) => {
           buildId: args.buildId,
         });
         const details = await getBuildDetails(kv, identity, args.buildId);
-        return createTextResult(details);
+        const summary = `Build details for "${details.name || 'Unnamed'}" - Performance score: ${details.performanceScore}`;
+        return createUIResult(details, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in getBuildDetails", {
           error,
@@ -446,7 +456,8 @@ const getServer = (req: express.Request) => {
           underglows: UnderglowSchema.options,
           driverPersonas: DriverPersonaSchema.options,
         };
-        return createTextResult(options);
+        const summary = `Available customization options: ${options.colors.length} colors, ${options.wheels.length} wheel types, and more`;
+        return createUIResult(options, summary, WIDGETS.optionsGrid);
       } catch (error) {
         logger.error("Error in getCustomizationOptions", { error });
         return createErrorResult(error);
@@ -486,12 +497,13 @@ const getServer = (req: express.Request) => {
       try {
         logger.info("Tool executed: getPersonaInfo", { persona: args.persona });
         if (args.persona) {
-          return createTextResult({
-            persona: args.persona,
-            ...PERSONA_PERKS[args.persona],
-          });
+          const persona = args.persona as DriverPersona;
+          const personaData = { persona, ...PERSONA_PERKS[persona] };
+          const summary = `Driver persona: ${persona}`;
+          return createUIResult(personaData, summary, WIDGETS.personaCard);
         }
-        return createTextResult(PERSONA_PERKS);
+        const summary = `All ${Object.keys(PERSONA_PERKS).length} driver personas`;
+        return createUIResult(PERSONA_PERKS, summary, WIDGETS.personaCard);
       } catch (error) {
         logger.error("Error in getPersonaInfo", { error });
         return createErrorResult(error);
@@ -504,6 +516,9 @@ const getServer = (req: express.Request) => {
 
 const app = express();
 app.use(express.json());
+
+// Serve widget bundles for ChatGPT App UI
+app.use("/widgets", express.static("dist/widgets"));
 
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 
