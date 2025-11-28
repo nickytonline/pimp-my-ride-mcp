@@ -1,8 +1,8 @@
 import express from "express";
 import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
-import { dirname } from "node:path";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { mkdir, readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { OpenAIMcpServer } from "./lib/openai-mcp-server.ts";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
@@ -13,6 +13,9 @@ import { WIDGETS } from "./widgets/registry.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config.ts";
 import { createKV, type KV } from "./storage/index.ts";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import { resolveIdentity } from "./auth/pomerium.ts";
 import {
   getCurrentBuild,
@@ -42,13 +45,67 @@ let kv: KV;
 
 const getServer = (req: express.Request) => {
   const config = getConfig();
-  const server = new McpServer({
+  const server = new OpenAIMcpServer({
     name: config.SERVER_NAME,
     version: config.SERVER_VERSION,
+    capabilities: {
+      resources: {},
+      tools: {},
+    },
   });
 
   // Resolve user identity from Pomerium headers
   const identity = resolveIdentity(req);
+
+  // Register widget resources for ChatGPT App UI
+  // Each widget must be registered as an MCP resource with text/html+skybridge MIME type
+  Object.values(WIDGETS).forEach((widget) => {
+    server.registerResource(
+      widget.id,
+      widget.uri,
+      {
+        title: `${widget.id} widget`,
+        description: `HTML template for ${widget.id}`,
+      },
+      async () => {
+        try {
+          logger.info("🎨 WIDGET RESOURCE REQUESTED", {
+            uri: widget.uri,
+            widgetId: widget.id,
+            templateFile: widget.templateFile,
+          });
+
+          // Read the HTML template file
+          const templatePath = join(__dirname, "widgets", "templates", widget.templateFile);
+          let template = await readFile(templatePath, "utf-8");
+
+          // Replace {{BASE_URL}} placeholder with the actual widget base URL
+          template = template.replace(/\{\{BASE_URL\}\}/g, config.WIDGET_BASE_URL);
+
+          logger.info("✅ Serving widget resource", {
+            uri: widget.uri,
+            baseUrl: config.WIDGET_BASE_URL,
+            templateLength: template.length,
+          });
+
+          return {
+            contents: [{
+              uri: widget.uri,
+              mimeType: "text/html+skybridge",
+              text: template,
+            }],
+          };
+        } catch (error) {
+          logger.error("Failed to load widget template", {
+            widget: widget.id,
+            templateFile: widget.templateFile,
+            error: error instanceof Error ? error.message : error,
+          });
+          throw error;
+        }
+      }
+    );
+  });
 
   // Register tool: Get current build
   server.registerTool(
@@ -70,7 +127,16 @@ const getServer = (req: express.Request) => {
         });
         const build = await getCurrentBuild(kv, identity);
         const summary = `Your ${build.car.color} build "${build.name || 'Unnamed'}" with ${build.car.wheels} wheels`;
-        return createUIResult(build, summary, WIDGETS.carBuildCard);
+        const result = createUIResult(build, summary, WIDGETS.carBuildCard);
+
+        // Debug logging
+        logger.info("Returning UI result", {
+          hasStructuredContent: !!result.structuredContent,
+          hasMeta: !!result._meta,
+          outputTemplate: result._meta?.["openai/outputTemplate"],
+        });
+
+        return result;
       } catch (error) {
         logger.error("Error in getCurrentBuild", {
           error,
@@ -517,8 +583,21 @@ const getServer = (req: express.Request) => {
 const app = express();
 app.use(express.json());
 
-// Serve widget bundles for ChatGPT App UI
-app.use("/widgets", express.static("dist/widgets"));
+// Serve widget bundles for ChatGPT App UI with permissive CORS so ChatGPT iframes can load them
+app.use(
+  "/widgets",
+  (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+  },
+  express.static("dist/widgets"),
+);
 
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 
@@ -576,7 +655,7 @@ const mcpHandler = async (req: express.Request, res: express.Response) => {
         name: config.SERVER_NAME,
         version: config.SERVER_VERSION,
         description: "Pimp My Ride MCP Server - Car customization and racing",
-        capabilities: ["tools"],
+        capabilities: ["tools", "resources"],
       });
     }
   } catch (error) {

@@ -18,7 +18,14 @@ const configSchema = z.object({
   SQLITE_VERBOSE: z.coerce.boolean().default(false),
 
   // UI Widget configuration
-  WIDGET_BASE_URL: z.string().url().default("http://localhost:5173/widgets"),
+  // In production, should be set to your server's public URL (e.g., https://your-server.com/widgets)
+  // In development with Vite dev server, use http://localhost:5173/widgets
+  // For local testing without Vite, use http://localhost:3000/widgets
+  WIDGET_BASE_URL: z
+    .string()
+    .url()
+    .default("http://localhost:3000/widgets")
+    .transform((url) => url.replace(/\/+$/, "")), // Strip trailing slashes
 });
 
 export type Config = z.infer<typeof configSchema>;
