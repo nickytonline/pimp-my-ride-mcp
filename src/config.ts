@@ -16,6 +16,9 @@ const configSchema = z.object({
     .default("sqlite"),
   SQLITE_DB_PATH: z.string().default("./data/pimp-my-ride.db"),
   SQLITE_VERBOSE: z.coerce.boolean().default(false),
+
+  // UI Widget configuration
+  WIDGET_BASE_URL: z.string().url().default("http://localhost:5173/widgets"),
 });
 
 export type Config = z.infer<typeof configSchema>;

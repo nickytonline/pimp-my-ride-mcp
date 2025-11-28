@@ -5,8 +5,12 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "vite build",
-    "dev": "node --experimental-strip-types --watch src/index.ts",
+    "build": "npm run build:server && npm run build:widgets",
+    "build:server": "vite build",
+    "build:widgets": "vite build --config vite.widgets.config.ts",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:widgets\"",
+    "dev:server": "node --experimental-strip-types --watch src/index.ts",
+    "dev:widgets": "vite --config vite.widgets.config.ts",
     "start": "node dist/index.js",
     "test": "vitest",
     "test:ci": "vitest run --reporter=json --outputFile=test-results.json",
@@ -28,8 +32,11 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.18.8",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.2.0",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0",
@@ -45,6 +52,8 @@
     "express": "^5.1.0",
     "pino": "^10.0.0",
     "pino-pretty": "^13.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "zod": "^4.1.12"
   }
 }
