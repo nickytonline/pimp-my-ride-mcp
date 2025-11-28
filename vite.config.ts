@@ -1,8 +1,20 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig(({ command }) => ({
   // Build configuration
+  plugins: [
+    // Copy widget templates to dist/widgets/templates
+    viteStaticCopy({
+      targets: [
+        {
+          src: "src/widgets/templates/*.html",
+          dest: "widgets/templates",
+        },
+      ],
+    }),
+  ],
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
@@ -25,6 +37,7 @@ export default defineConfig(({ command }) => ({
         "node:http",
         "node:path",
         "node:fs",
+        "node:fs/promises",
         "node:url",
         "node:buffer",
         "node:stream",

@@ -8,8 +8,9 @@
     "build": "npm run build:server && npm run build:widgets",
     "build:server": "vite build",
     "build:widgets": "vite build --config vite.widgets.config.ts",
+    "predev": "npm run build:server",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:widgets\"",
-    "dev:server": "node --experimental-strip-types --watch src/index.ts",
+    "dev:server": "WIDGET_BASE_URL=http://localhost:5173/widgets node --experimental-strip-types --watch src/index.ts",
     "dev:widgets": "vite --config vite.widgets.config.ts",
     "start": "node dist/index.js",
     "test": "vitest",
@@ -42,6 +43,7 @@
     "prettier": "^3.0.0",
     "typescript": "^5.0.0",
     "vite": "^7.1.9",
+    "vite-plugin-static-copy": "^3.1.4",
     "vitest": "^3.2.4"
   },
   "dependencies": {
