@@ -2,7 +2,6 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
@@ -33,6 +32,7 @@ import {
   UnderglowSchema,
   DriverPersonaSchema,
 } from "./domain/models.ts";
+import { OpenAIMcpServer as McpServer } from "./lib/apps-sdk-mcp-server.ts";
 
 // Initialize KV storage
 let kv: KV;
