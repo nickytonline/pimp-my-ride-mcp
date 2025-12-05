@@ -19,12 +19,35 @@ export interface WidgetDescriptor {
  * @param widget - The widget descriptor
  * @returns Metadata object for _meta field in tool response
  */
-export function createWidgetMeta(widget: WidgetDescriptor): Record<string, unknown> {
+export function createWidgetMeta(
+  widget: WidgetDescriptor,
+): Record<string, unknown> {
   return {
     "openai/outputTemplate": widget.uri,
     "openai/toolInvocation/invoking": widget.invoking,
     "openai/toolInvocation/invoked": widget.invoked,
     "openai/widgetAccessible": true,
     "openai/resultCanProduceWidget": true,
+  };
+}
+
+export function createWidgetResourceMeta(
+  widgetDomain: string,
+  options?: {
+    prefersBorder?: boolean;
+    connectDomains?: string[];
+    resourceDomains?: string[];
+  },
+): Record<string, unknown> {
+  const connectDomains = options?.connectDomains ?? [widgetDomain];
+  const resourceDomains = options?.resourceDomains ?? [widgetDomain];
+
+  return {
+    "openai/widgetPrefersBorder": options?.prefersBorder ?? true,
+    "openai/widgetDomain": widgetDomain,
+    "openai/widgetCSP": {
+      connect_domains: connectDomains,
+      resource_domains: resourceDomains,
+    },
   };
 }

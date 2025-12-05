@@ -19,12 +19,19 @@ export interface UIToolResult extends CallToolResult {
 export function createUIResult(
   data: unknown,
   textSummary: string,
-  widget: WidgetDescriptor
+  widget: WidgetDescriptor,
+  metaOverrides?: Record<string, unknown>,
 ): UIToolResult {
   // Convert data to the expected structured content format
-  const structuredContent = data === undefined || data === null
-    ? undefined
-    : (data as { [x: string]: unknown });
+  const structuredContent =
+    data === undefined || data === null
+      ? undefined
+      : (data as { [x: string]: unknown });
+
+  const baseMeta = createWidgetMeta(widget);
+  const mergedMeta = metaOverrides
+    ? { ...baseMeta, ...metaOverrides }
+    : baseMeta;
 
   return {
     content: [
@@ -34,6 +41,6 @@ export function createUIResult(
       },
     ],
     structuredContent,
-    _meta: createWidgetMeta(widget),
+    _meta: mergedMeta,
   };
 }

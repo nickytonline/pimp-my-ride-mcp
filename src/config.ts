@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const defaultWidgetBaseUrl = "http://localhost:3000/widgets";
+const defaultWidgetDevServerUrl = "http://localhost:5173";
+
 const configSchema = z.object({
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().default(3000),
@@ -18,14 +21,19 @@ const configSchema = z.object({
   SQLITE_VERBOSE: z.coerce.boolean().default(false),
 
   // UI Widget configuration
-  // In production, should be set to your server's public URL (e.g., https://your-server.com/widgets)
-  // In development with Vite dev server, use http://localhost:5173/widgets
-  // For local testing without Vite, use http://localhost:3000/widgets
+  // In production, set this to your public URL (e.g., https://your-server.com/widgets)
+  // In development we proxy Vite through Express, so the default points to http://localhost:3000/widgets
   WIDGET_BASE_URL: z
     .string()
     .url()
-    .default("http://localhost:3000/widgets")
+    .default(defaultWidgetBaseUrl)
     .transform((url) => url.replace(/\/+$/, "")), // Strip trailing slashes
+  // URL for the Vite dev server that hosts raw widgets. Only used in development for proxying
+  WIDGET_DEV_SERVER_URL: z
+    .string()
+    .url()
+    .default(defaultWidgetDevServerUrl)
+    .transform((url) => url.replace(/\/+$/, "")),
 });
 
 export type Config = z.infer<typeof configSchema>;

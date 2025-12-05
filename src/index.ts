@@ -2,18 +2,21 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { OpenAIMcpServer } from "./lib/openai-mcp-server.ts";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { createTextResult } from "./lib/utils.ts";
 import { createErrorResult } from "./lib/errors.ts";
 import { createUIResult } from "./lib/ui/response.ts";
+import { createWidgetResourceMeta } from "./lib/ui/widget-meta.ts";
 import { WIDGETS } from "./widgets/registry.ts";
 import { logger } from "./logger.ts";
-import { getConfig } from "./config.ts";
+import { getConfig, isDevelopment } from "./config.ts";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import { createKV, type KV } from "./storage/index.ts";
 import { fileURLToPath } from "node:url";
+import { transformWidgetTemplateForDev } from "./widgets/templates/devTransform.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 import { resolveIdentity } from "./auth/pomerium.ts";
@@ -37,22 +40,40 @@ import {
   ExhaustSchema,
   UnderglowSchema,
   DriverPersonaSchema,
+  CarConfigUpdateSchema,
+  DriverProfileUpdateSchema,
   type DriverPersona,
 } from "./domain/models.ts";
 
 // Initialize KV storage
 let kv: KV;
 
+// Guard against unexpected non-Zod object schemas reaching tool registration
+const ensureZodRawShape = (
+  schema: z.ZodTypeAny | null | undefined,
+): z.ZodRawShape => {
+  if (schema instanceof z.ZodObject) {
+    return schema.shape;
+  }
+
+  return {} as z.ZodRawShape;
+};
+
 const getServer = (req: express.Request) => {
   const config = getConfig();
-  const server = new OpenAIMcpServer({
-    name: config.SERVER_NAME,
-    version: config.SERVER_VERSION,
-    capabilities: {
-      resources: {},
-      tools: {},
+  const widgetDomain = new URL(config.WIDGET_BASE_URL).origin;
+  const server = new McpServer(
+    {
+      name: config.SERVER_NAME,
+      version: config.SERVER_VERSION,
     },
-  });
+    {
+      capabilities: {
+        resources: {},
+        tools: {},
+      },
+    },
+  );
 
   // Resolve user identity from Pomerium headers
   const identity = resolveIdentity(req);
@@ -67,11 +88,12 @@ const getServer = (req: express.Request) => {
         title: `${widget.id} widget`,
         description: `HTML template for ${widget.id}`,
         mimeType: "text/html+skybridge",
-        _meta: {
-          "openai/widgetPrefersBorder": true,
-        },
+        _meta: createWidgetResourceMeta(widgetDomain, {
+          connectDomains: [widgetDomain],
+          resourceDomains: [widgetDomain],
+        }),
       },
-      async () => {
+      async (_uri) => {
         try {
           logger.info("🎨 WIDGET RESOURCE REQUESTED", {
             uri: widget.uri,
@@ -80,11 +102,19 @@ const getServer = (req: express.Request) => {
           });
 
           // Read the HTML template file
-          const templatePath = join(__dirname, "widgets", "templates", widget.templateFile);
+          const templatePath = join(
+            __dirname,
+            "widgets",
+            "templates",
+            widget.templateFile,
+          );
           let template = await readFile(templatePath, "utf-8");
 
           // Replace {{BASE_URL}} placeholder with the actual widget base URL
-          template = template.replace(/\{\{BASE_URL\}\}/g, config.WIDGET_BASE_URL);
+          template = template.replace(
+            /\{\{BASE_URL\}\}/g,
+            config.WIDGET_BASE_URL,
+          );
 
           logger.info("✅ Serving widget resource", {
             uri: widget.uri,
@@ -93,11 +123,13 @@ const getServer = (req: express.Request) => {
           });
 
           return {
-            contents: [{
-              uri: widget.uri,
-              mimeType: "text/html+skybridge",
-              text: template,
-            }],
+            contents: [
+              {
+                uri: widget.uri,
+                mimeType: "text/html+skybridge",
+                text: template,
+              },
+            ],
           };
         } catch (error) {
           logger.error("Failed to load widget template", {
@@ -107,7 +139,7 @@ const getServer = (req: express.Request) => {
           });
           throw error;
         }
-      }
+      },
     );
   });
 
@@ -122,14 +154,7 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
-      inputSchema: {},
-      _meta: {
-        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
+      inputSchema: ensureZodRawShape({}),
     },
     async () => {
       try {
@@ -137,7 +162,7 @@ const getServer = (req: express.Request) => {
           userId: identity.userId,
         });
         const build = await getCurrentBuild(kv, identity);
-        const summary = `Your ${build.car.color} build "${build.name || 'Unnamed'}" with ${build.car.wheels} wheels`;
+        const summary = `Your ${build.car.color} build "${build.name || "Unnamed"}" with ${build.car.wheels} wheels`;
         const result = createUIResult(build, summary, WIDGETS.carBuildCard);
 
         // Debug logging
@@ -164,132 +189,7 @@ const getServer = (req: express.Request) => {
     {
       title: "Update Car Configuration",
       description: "Update car attributes like color, wheels, bodyKit, etc.",
-      _meta: {
-        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        color: z
-          .enum([
-            "red",
-            "blue",
-            "green",
-            "yellow",
-            "orange",
-            "purple",
-            "pink",
-            "black",
-            "white",
-            "silver",
-            "gold",
-            "cyan",
-            "magenta",
-            "lime",
-          ])
-          .optional()
-          .describe("Primary color of the car"),
-        secondaryColor: z
-          .enum([
-            "red",
-            "blue",
-            "green",
-            "yellow",
-            "orange",
-            "purple",
-            "pink",
-            "black",
-            "white",
-            "silver",
-            "gold",
-            "cyan",
-            "magenta",
-            "lime",
-          ])
-          .optional()
-          .describe("Secondary/accent color"),
-        wheels: z
-          .enum([
-            "stock",
-            "sport",
-            "racing",
-            "offroad",
-            "chrome",
-            "neon",
-            "spinner",
-          ])
-          .optional()
-          .describe("Wheel type"),
-        bodyKit: z
-          .enum([
-            "stock",
-            "sport",
-            "racing",
-            "drift",
-            "luxury",
-            "rally",
-            "muscle",
-          ])
-          .optional()
-          .describe("Body kit style"),
-        decal: z
-          .enum([
-            "none",
-            "racing_stripes",
-            "flames",
-            "tribal",
-            "camo",
-            "carbon_fiber",
-            "checkered",
-            "sponsor",
-            "custom",
-          ])
-          .optional()
-          .describe("Decal/livery style"),
-        spoiler: z
-          .enum(["none", "stock", "sport", "racing", "gt_wing", "ducktail"])
-          .optional()
-          .describe("Spoiler type"),
-        exhaust: z
-          .enum(["stock", "sport", "racing", "dual", "quad", "side_exit"])
-          .optional()
-          .describe("Exhaust system"),
-        underglow: z
-          .enum(["none", "red", "blue", "green", "purple", "rainbow", "white"])
-          .optional()
-          .describe("Underglow lighting"),
-        performance: z
-          .object({
-            power: z
-              .number()
-              .min(0)
-              .max(100)
-              .optional()
-              .describe("Engine power (0-100)"),
-            grip: z
-              .number()
-              .min(0)
-              .max(100)
-              .optional()
-              .describe("Tire grip (0-100)"),
-            aero: z
-              .number()
-              .min(0)
-              .max(100)
-              .optional()
-              .describe("Aerodynamics (0-100)"),
-            weight: z
-              .number()
-              .min(0)
-              .max(100)
-              .optional()
-              .describe("Weight reduction (0-100, higher = lighter)"),
-          })
-          .optional()
-          .describe("Performance characteristics"),
-      },
+      inputSchema: ensureZodRawShape(CarConfigUpdateSchema),
     },
     async (args) => {
       try {
@@ -316,33 +216,7 @@ const getServer = (req: express.Request) => {
     {
       title: "Update Driver Profile",
       description: "Set driver persona and nickname",
-      _meta: {
-        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        persona: z
-          .enum([
-            "CoolCalmCollected",
-            "RoadRage",
-            "SpeedDemon",
-            "Cautious",
-            "ShowOff",
-            "Tactical",
-            "Wildcard",
-          ])
-          .optional()
-          .describe("Driver personality and racing style"),
-        nickname: z
-          .string()
-          .min(1)
-          .max(50)
-          .optional()
-          .describe("Driver nickname"),
-      },
+      inputSchema: ensureZodRawShape(DriverProfileUpdateSchema),
     },
     async (args) => {
       try {
@@ -351,7 +225,7 @@ const getServer = (req: express.Request) => {
           updates: args,
         });
         const build = await updateDriverProfile(kv, identity, args);
-        const summary = `Driver profile updated to ${build.driver.persona}${build.driver.nickname ? ` (${build.driver.nickname})` : ''}`;
+        const summary = `Driver profile updated to ${build.driver.persona}${build.driver.nickname ? ` (${build.driver.nickname})` : ""}`;
         return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in updateDriverProfile", {
@@ -370,16 +244,11 @@ const getServer = (req: express.Request) => {
       title: "Save Car Build",
       description:
         "Save the current car build configuration under a specific name",
-      _meta: {
-        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        name: z.string().min(1).max(100).describe("Name for the saved build"),
-      },
+      inputSchema: ensureZodRawShape(
+        z.object({
+          name: z.string().min(1).max(50),
+        }),
+      ),
     },
     async (args) => {
       try {
@@ -407,16 +276,11 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
-      _meta: {
-        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        buildId: z.string().describe("ID of the build to load"),
-      },
+      inputSchema: ensureZodRawShape(
+        z.object({
+          buildId: z.string().min(1),
+        }),
+      ),
     },
     async (args) => {
       try {
@@ -425,7 +289,7 @@ const getServer = (req: express.Request) => {
           buildId: args.buildId,
         });
         const build = await loadBuild(kv, identity, args.buildId);
-        const summary = `Loaded build "${build.name || 'Unnamed'}"`;
+        const summary = `Loaded build "${build.name || "Unnamed"}"`;
         return createUIResult(build, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in loadBuild", { error, userId: identity.userId });
@@ -444,31 +308,18 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
-      _meta: {
-        "openai/outputTemplate": WIDGETS.buildList.uri,
-        "openai/toolInvocation/invoking": WIDGETS.buildList.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.buildList.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        limit: z
-          .number()
-          .min(1)
-          .max(100)
-          .optional()
-          .describe("Maximum number of builds to return (default: 50)"),
-        cursor: z
-          .string()
-          .optional()
-          .describe("Pagination cursor from previous response"),
-      },
+      inputSchema: ensureZodRawShape(
+        z.object({
+          limit: z.number().int().min(1).max(100).optional(),
+          cursor: z.string().optional(),
+        }),
+      ),
     },
     async (args) => {
       try {
         logger.info("Tool executed: listBuilds", { userId: identity.userId });
         const result = await listBuilds(kv, identity, args);
-        const summary = `Found ${result.builds.length} saved build${result.builds.length === 1 ? '' : 's'}`;
+        const summary = `Found ${result.builds.length} saved build${result.builds.length === 1 ? "" : "s"}`;
         return createUIResult(result, summary, WIDGETS.buildList);
       } catch (error) {
         logger.error("Error in listBuilds", { error, userId: identity.userId });
@@ -483,9 +334,11 @@ const getServer = (req: express.Request) => {
     {
       title: "Delete Car Build",
       description: "Delete a saved car build (cannot delete active build)",
-      inputSchema: {
-        buildId: z.string().describe("ID of the build to delete"),
-      },
+      inputSchema: ensureZodRawShape(
+        z.object({
+          buildId: z.string().min(1),
+        }),
+      ),
     },
     async (args) => {
       try {
@@ -516,19 +369,11 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
-      _meta: {
-        "openai/outputTemplate": WIDGETS.carBuildCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.carBuildCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.carBuildCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        buildId: z
-          .string()
-          .optional()
-          .describe("ID of the build (defaults to active build)"),
-      },
+      inputSchema: ensureZodRawShape(
+        z.object({
+          buildId: z.string().min(1).optional(),
+        }),
+      ),
     },
     async (args) => {
       try {
@@ -537,7 +382,7 @@ const getServer = (req: express.Request) => {
           buildId: args.buildId,
         });
         const details = await getBuildDetails(kv, identity, args.buildId);
-        const summary = `Build details for "${details.name || 'Unnamed'}" - Performance score: ${details.performanceScore}`;
+        const summary = `Build details for "${details.name || "Unnamed"}" - Performance score: ${details.performanceScore}`;
         return createUIResult(details, summary, WIDGETS.carBuildCard);
       } catch (error) {
         logger.error("Error in getBuildDetails", {
@@ -560,14 +405,7 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
-      _meta: {
-        "openai/outputTemplate": WIDGETS.optionsGrid.uri,
-        "openai/toolInvocation/invoking": WIDGETS.optionsGrid.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.optionsGrid.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {},
+      inputSchema: ensureZodRawShape({}),
     },
     async () => {
       try {
@@ -602,29 +440,11 @@ const getServer = (req: express.Request) => {
         readOnlyHint: true,
         openWorldHint: true,
       },
-      _meta: {
-        "openai/outputTemplate": WIDGETS.personaCard.uri,
-        "openai/toolInvocation/invoking": WIDGETS.personaCard.invoking,
-        "openai/toolInvocation/invoked": WIDGETS.personaCard.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true,
-      },
-      inputSchema: {
-        persona: z
-          .enum([
-            "CoolCalmCollected",
-            "RoadRage",
-            "SpeedDemon",
-            "Cautious",
-            "ShowOff",
-            "Tactical",
-            "Wildcard",
-          ])
-          .optional()
-          .describe(
-            "Specific persona to get info for (returns all if not specified)",
-          ),
-      },
+      inputSchema: ensureZodRawShape(
+        z.object({
+          persona: DriverPersonaSchema.optional(),
+        }),
+      ),
     },
     async (args) => {
       try {
@@ -650,21 +470,76 @@ const getServer = (req: express.Request) => {
 const app = express();
 app.use(express.json());
 
+const config = getConfig();
+
 // Serve widget bundles for ChatGPT App UI with permissive CORS so ChatGPT iframes can load them
-app.use(
-  "/widgets",
-  (req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    if (req.method === "OPTIONS") {
-      res.sendStatus(204);
-      return;
+const widgetCors = (
+  req: express.Request,
+  res: express.Response,
+  next: () => void,
+) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+};
+
+if (isDevelopment()) {
+  const viteTarget = config.WIDGET_DEV_SERVER_URL;
+  logger.info("Proxying widget requests to Vite dev server", {
+    target: viteTarget,
+  });
+  const devProxy = createProxyMiddleware({
+    target: viteTarget,
+    changeOrigin: true,
+    ws: true,
+  });
+
+  const templateDir = join(__dirname, "widgets", "templates");
+
+  app.get("/widgets/:templateName", widgetCors, async (req, res, next) => {
+    if (!req.params.templateName.endsWith(".html")) {
+      return next();
     }
-    next();
-  },
-  express.static("dist/widgets"),
-);
+
+    try {
+      const templatePath = join(templateDir, req.params.templateName);
+      const template = await readFile(templatePath, "utf-8");
+      const html = transformWidgetTemplateForDev(
+        template,
+        config.WIDGET_BASE_URL,
+        config.WIDGET_DEV_SERVER_URL,
+      );
+      res.type("text/html").send(html);
+      return;
+    } catch (error) {
+      logger.error("Failed to serve dev widget template", {
+        template: req.params.templateName,
+        error: error instanceof Error ? error.message : error,
+      });
+      return devProxy(req, res, next);
+    }
+  });
+
+  app.use("/widgets", widgetCors, devProxy);
+
+  const assetProxyPaths = [
+    "/@vite",
+    "/@react-refresh",
+    "/src",
+    "/@fs",
+    "/node_modules",
+  ];
+  assetProxyPaths.forEach((path) => {
+    app.use(path, devProxy);
+  });
+} else {
+  app.use("/widgets", widgetCors, express.static("dist/widgets"));
+}
 
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 
@@ -718,6 +593,7 @@ const mcpHandler = async (req: express.Request, res: express.Response) => {
     // For GET requests without session, return server info
     if (req.method === "GET") {
       const config = getConfig();
+      const metadata = {};
       res.json({
         name: config.SERVER_NAME,
         version: config.SERVER_VERSION,
@@ -755,8 +631,6 @@ app.get("/health", async (req, res) => {
 });
 
 async function main() {
-  const config = getConfig();
-
   // Ensure data directory exists for SQLite
   if (config.STORAGE_BACKEND === "sqlite") {
     const dataDir = dirname(config.SQLITE_DB_PATH);

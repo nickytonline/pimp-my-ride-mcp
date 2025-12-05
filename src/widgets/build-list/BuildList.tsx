@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { BuildListResult } from "../shared/types";
 
 export function BuildList() {
-  const [data, setData] = useState<BuildListResult | null>(null);
+  const [data, setData] = useState<BuildListResult | null>();
 
   useEffect(() => {
     const content = window.openai?.structuredContent as BuildListResult;
@@ -11,9 +11,9 @@ export function BuildList() {
     }
   }, []);
 
-  if (!data) {
-    return <div>Loading...</div>;
-  }
+  // if (!data) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <div
@@ -25,16 +25,16 @@ export function BuildList() {
       }}
     >
       <h2 style={{ margin: "0 0 16px 0" }}>
-        Saved Builds ({data.builds.length})
+        Saved Builds ({data?.builds.length})
       </h2>
 
-      {data.builds.length === 0 ? (
+      {data?.builds.length === 0 ? (
         <p style={{ color: "#666", fontStyle: "italic" }}>
           No saved builds found.
         </p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {data.builds.map((build) => (
+          {data?.builds.map((build) => (
             <li
               key={build.id}
               style={{
@@ -56,19 +56,15 @@ export function BuildList() {
               </div>
               <div style={{ fontSize: "12px", color: "#666" }}>
                 <div>ID: {build.id}</div>
-                <div>
-                  Created: {new Date(build.createdAt).toLocaleString()}
-                </div>
-                <div>
-                  Updated: {new Date(build.updatedAt).toLocaleString()}
-                </div>
+                <div>Created: {new Date(build.createdAt).toLocaleString()}</div>
+                <div>Updated: {new Date(build.updatedAt).toLocaleString()}</div>
               </div>
             </li>
           ))}
         </ul>
       )}
 
-      {data.hasMore && (
+      {data?.hasMore && (
         <div
           style={{
             marginTop: "16px",

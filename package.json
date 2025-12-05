@@ -10,7 +10,7 @@
     "build:widgets": "vite build --config vite.widgets.config.ts",
     "predev": "npm run build:server",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:widgets\"",
-    "dev:server": "WIDGET_BASE_URL=http://localhost:5173/widgets node --experimental-strip-types --watch src/index.ts",
+    "dev:server": "WIDGET_BASE_URL=http://localhost:3000/widgets node --experimental-strip-types --watch src/index.ts",
     "dev:widgets": "vite --config vite.widgets.config.ts",
     "start": "node dist/index.js",
     "test": "vitest",
@@ -52,10 +52,11 @@
     "@types/express": "^5.0.3",
     "better-sqlite3": "^12.4.1",
     "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5",
     "pino": "^10.0.0",
     "pino-pretty": "^13.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "zod": "^4.1.12"
+    "zod": "^3.25.76"
   }
 }
